@@ -1,0 +1,649 @@
+-- MKS Database v30 Schema
+-- SQLDelight initial migration: creates all 26 tables with IF NOT EXISTS
+-- Corresponds to Room schema version 30 (MKS_DATABASE_VERSION = 30)
+
+-- ============================================================
+-- Standalone tables (no foreign keys)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS workspaces (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    isDefault INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS index_workspaces_externalId ON workspaces(externalId);
+
+CREATE TABLE IF NOT EXISTS category_metadata (
+    name TEXT NOT NULL PRIMARY KEY,
+    emoji TEXT,
+    color INTEGER,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS index_category_metadata_deletedAt ON category_metadata(deletedAt);
+
+CREATE TABLE IF NOT EXISTS asset_references (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    path TEXT NOT NULL,
+    ownerType TEXT NOT NULL,
+    ownerId INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS index_asset_references_path ON asset_references(path);
+CREATE INDEX IF NOT EXISTS index_asset_references_ownerType_ownerId ON asset_references(ownerType, ownerId);
+CREATE UNIQUE INDEX IF NOT EXISTS index_asset_references_ownerType_ownerId_path ON asset_references(ownerType, ownerId, path);
+CREATE INDEX IF NOT EXISTS index_asset_references_deletedAt ON asset_references(deletedAt);
+
+CREATE TABLE IF NOT EXISTS knowledge_study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    targetType TEXT NOT NULL,
+    targetId INTEGER NOT NULL,
+    stateJson TEXT NOT NULL,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS index_knowledge_study_sessions_deletedAt ON knowledge_study_sessions(deletedAt);
+
+CREATE TABLE IF NOT EXISTS study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    targetType TEXT NOT NULL,
+    targetId INTEGER NOT NULL,
+    label TEXT,
+    stateJson TEXT NOT NULL,
+    timeSpentMs INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    incorrectCount INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS index_study_sessions_targetId_targetType ON study_sessions(targetId, targetType);
+CREATE INDEX IF NOT EXISTS index_study_sessions_deletedAt ON study_sessions(deletedAt);
+
+-- ============================================================
+-- Workspace-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS workspace_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL,
+    language TEXT,
+    theme TEXT,
+    defaultSort TEXT,
+    quizDefaultsJson TEXT,
+    importDefaultsJson TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(workspaceId) REFERENCES workspaces(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_workspace_settings_workspaceId ON workspace_settings(workspaceId);
+
+CREATE TABLE IF NOT EXISTS books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL DEFAULT 0,
+    externalId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    iconName TEXT,
+    coverImage TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    contentUpdatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    fields TEXT NOT NULL DEFAULT '[]',
+    questionCount INTEGER NOT NULL DEFAULT 0,
+    answeredCount INTEGER NOT NULL DEFAULT 0,
+    totalAttempts INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    accuracyPercentage REAL NOT NULL DEFAULT 0.0,
+    deletedAt INTEGER,
+    FOREIGN KEY(workspaceId) REFERENCES workspaces(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_books_workspaceId ON books(workspaceId);
+CREATE INDEX IF NOT EXISTS index_books_deletedAt ON books(deletedAt);
+CREATE UNIQUE INDEX IF NOT EXISTS index_books_externalId ON books(externalId);
+
+-- ============================================================
+-- Book-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS quizzes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    category TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    iconName TEXT,
+    coverImage TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    contentUpdatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    questionCount INTEGER NOT NULL DEFAULT 0,
+    answeredCount INTEGER NOT NULL DEFAULT 0,
+    totalAttempts INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    accuracyPercentage REAL NOT NULL DEFAULT 0.0,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_quizzes_bookId ON quizzes(bookId);
+CREATE INDEX IF NOT EXISTS index_quizzes_deletedAt ON quizzes(deletedAt);
+CREATE UNIQUE INDEX IF NOT EXISTS index_quizzes_externalId ON quizzes(externalId);
+
+CREATE TABLE IF NOT EXISTS flashcard_decks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    cardCount INTEGER NOT NULL DEFAULT 0,
+    studiedCount INTEGER NOT NULL DEFAULT 0,
+    masteryPercentage REAL NOT NULL DEFAULT 0.0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_flashcard_decks_bookId ON flashcard_decks(bookId);
+CREATE INDEX IF NOT EXISTS index_flashcard_decks_deletedAt ON flashcard_decks(deletedAt);
+
+CREATE TABLE IF NOT EXISTS slideshow_courses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    slideCount INTEGER NOT NULL DEFAULT 0,
+    studiedSlideCount INTEGER NOT NULL DEFAULT 0,
+    progress REAL NOT NULL DEFAULT 0.0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isDerived INTEGER NOT NULL DEFAULT 0,
+    sourceQuizId INTEGER,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_slideshow_courses_bookId ON slideshow_courses(bookId);
+CREATE INDEX IF NOT EXISTS index_slideshow_courses_deletedAt ON slideshow_courses(deletedAt);
+
+CREATE TABLE IF NOT EXISTS note_collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    noteCount INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_note_collections_bookId ON note_collections(bookId);
+CREATE INDEX IF NOT EXISTS index_note_collections_deletedAt ON note_collections(deletedAt);
+
+CREATE TABLE IF NOT EXISTS prompt_decks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_prompt_decks_bookId ON prompt_decks(bookId);
+CREATE INDEX IF NOT EXISTS index_prompt_decks_deletedAt ON prompt_decks(deletedAt);
+
+CREATE TABLE IF NOT EXISTS prompts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    stem TEXT NOT NULL,
+    conversationLinks TEXT NOT NULL DEFAULT '[]',
+    usageCount INTEGER NOT NULL DEFAULT 0,
+    lastUsedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_prompts_bookId ON prompts(bookId);
+CREATE INDEX IF NOT EXISTS index_prompts_deletedAt ON prompts(deletedAt);
+
+CREATE TABLE IF NOT EXISTS source_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER,
+    title TEXT NOT NULL,
+    sourceType TEXT NOT NULL,
+    author TEXT,
+    edition TEXT,
+    year TEXT,
+    publisher TEXT,
+    localPath TEXT,
+    externalUrl TEXT,
+    description TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_source_documents_bookId ON source_documents(bookId);
+CREATE INDEX IF NOT EXISTS index_source_documents_title ON source_documents(title);
+CREATE INDEX IF NOT EXISTS index_source_documents_sourceType ON source_documents(sourceType);
+CREATE INDEX IF NOT EXISTS index_source_documents_deletedAt ON source_documents(deletedAt);
+
+CREATE TABLE IF NOT EXISTS annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL,
+    bookId INTEGER NOT NULL,
+    ownerType TEXT NOT NULL,
+    ownerId INTEGER NOT NULL,
+    selectedText TEXT,
+    noteBody TEXT,
+    colorLabel TEXT NOT NULL DEFAULT 'YELLOW',
+    positionDataJson TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(workspaceId) REFERENCES workspaces(id) ON DELETE CASCADE,
+    FOREIGN KEY(bookId) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_annotations_workspaceId ON annotations(workspaceId);
+CREATE INDEX IF NOT EXISTS index_annotations_bookId ON annotations(bookId);
+CREATE INDEX IF NOT EXISTS index_annotations_ownerType_ownerId ON annotations(ownerType, ownerId);
+CREATE INDEX IF NOT EXISTS index_annotations_colorLabel ON annotations(colorLabel);
+CREATE INDEX IF NOT EXISTS index_annotations_deletedAt ON annotations(deletedAt);
+CREATE INDEX IF NOT EXISTS index_annotations_updatedAt ON annotations(updatedAt);
+
+-- ============================================================
+-- Quiz-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    quizId INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    type TEXT NOT NULL,
+    options TEXT NOT NULL,
+    correctAnswers TEXT NOT NULL,
+    explanation TEXT,
+    hint TEXT,
+    reference TEXT,
+    weight INTEGER NOT NULL DEFAULT 1,
+    imagePath TEXT,
+    imageName TEXT,
+    imageSource TEXT,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    isDropped INTEGER NOT NULL DEFAULT 0,
+    droppedAt INTEGER,
+    droppedReason TEXT,
+    isMarked INTEGER NOT NULL DEFAULT 0,
+    markedAt INTEGER,
+    markReason TEXT,
+    markReviewAt INTEGER,
+    notes TEXT,
+    categories TEXT NOT NULL DEFAULT '[]',
+    tags TEXT NOT NULL DEFAULT '[]',
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    additionalInfo TEXT,
+    sourceBookId TEXT,
+    sourceQuizId TEXT,
+    sourceQuestionId TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    timeSpentMs INTEGER NOT NULL DEFAULT 0,
+    lastAttemptResult INTEGER,
+    consecutiveCorrect INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER,
+    FOREIGN KEY(quizId) REFERENCES quizzes(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_questions_quizId ON questions(quizId);
+CREATE INDEX IF NOT EXISTS index_questions_isMarked ON questions(isMarked);
+CREATE INDEX IF NOT EXISTS index_questions_isDropped ON questions(isDropped);
+CREATE INDEX IF NOT EXISTS index_questions_markReviewAt ON questions(markReviewAt);
+CREATE INDEX IF NOT EXISTS index_questions_deletedAt ON questions(deletedAt);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    quizId INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    currentQuestionIndex INTEGER NOT NULL DEFAULT 0,
+    score INTEGER NOT NULL DEFAULT 0,
+    incorrectCount INTEGER NOT NULL DEFAULT 0,
+    answers TEXT NOT NULL DEFAULT '{}',
+    answersByIndex TEXT NOT NULL DEFAULT '{}',
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastModifiedAt INTEGER NOT NULL DEFAULT 0,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    questionIds TEXT NOT NULL DEFAULT '[]',
+    originalQuestionCount INTEGER NOT NULL DEFAULT 0,
+    shuffleQuestions INTEGER NOT NULL DEFAULT 1,
+    shuffleOptions INTEGER NOT NULL DEFAULT 1,
+    rapidMode INTEGER NOT NULL DEFAULT 0,
+    repeatWrong INTEGER NOT NULL DEFAULT 1,
+    quizTimerSeconds INTEGER NOT NULL DEFAULT 0,
+    questionTimerSeconds INTEGER NOT NULL DEFAULT 0,
+    rangeFrom INTEGER NOT NULL DEFAULT 0,
+    rangeTo INTEGER NOT NULL DEFAULT -1,
+    includeFilters TEXT NOT NULL DEFAULT '[]',
+    droppedOptions TEXT NOT NULL DEFAULT '{}',
+    droppedOptionsByIndex TEXT NOT NULL DEFAULT '{}',
+    visibleOptionsCount TEXT NOT NULL DEFAULT '{}',
+    visibleOptionsCountByIndex TEXT NOT NULL DEFAULT '{}',
+    currentStreak INTEGER NOT NULL DEFAULT 0,
+    maxStreak INTEGER NOT NULL DEFAULT 0,
+    resultTaxonomy TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER,
+    FOREIGN KEY(quizId) REFERENCES quizzes(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_sessions_quizId ON sessions(quizId);
+CREATE INDEX IF NOT EXISTS index_sessions_deletedAt ON sessions(deletedAt);
+
+-- ============================================================
+-- Question-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS question_categories (
+    questionId INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    deletedAt INTEGER,
+    PRIMARY KEY(questionId, category),
+    FOREIGN KEY(questionId) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_question_categories_questionId ON question_categories(questionId);
+CREATE INDEX IF NOT EXISTS index_question_categories_category ON question_categories(category);
+CREATE INDEX IF NOT EXISTS index_question_categories_deletedAt ON question_categories(deletedAt);
+
+CREATE TABLE IF NOT EXISTS question_assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    questionId INTEGER NOT NULL,
+    assetType TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    localPath TEXT,
+    externalUrl TEXT,
+    mimeType TEXT,
+    fileName TEXT,
+    fileSizeBytes INTEGER,
+    textContent TEXT,
+    sourceDocumentId INTEGER,
+    sourcePage TEXT,
+    sourceQuote TEXT,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isPrimary INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(questionId) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_question_assets_bookId ON question_assets(bookId);
+CREATE INDEX IF NOT EXISTS index_question_assets_quizId ON question_assets(quizId);
+CREATE INDEX IF NOT EXISTS index_question_assets_questionId ON question_assets(questionId);
+CREATE INDEX IF NOT EXISTS index_question_assets_assetType ON question_assets(assetType);
+CREATE INDEX IF NOT EXISTS index_question_assets_createdAt ON question_assets(createdAt);
+CREATE INDEX IF NOT EXISTS index_question_assets_sourceDocumentId ON question_assets(sourceDocumentId);
+CREATE INDEX IF NOT EXISTS index_question_assets_deletedAt ON question_assets(deletedAt);
+
+CREATE TABLE IF NOT EXISTS mistake_log_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    questionId INTEGER NOT NULL,
+    sessionId INTEGER,
+    selectedAnswer TEXT,
+    correctAnswer TEXT,
+    userReason TEXT,
+    correctConcept TEXT,
+    preventionNote TEXT,
+    linkedFlashcardId INTEGER,
+    linkedBlueprintId INTEGER,
+    linkedAssetId INTEGER,
+    isFixed INTEGER NOT NULL DEFAULT 0,
+    reviewAt INTEGER,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER,
+    FOREIGN KEY(questionId) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_bookId ON mistake_log_entries(bookId);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_quizId ON mistake_log_entries(quizId);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_questionId ON mistake_log_entries(questionId);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_sessionId ON mistake_log_entries(sessionId);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_reviewAt ON mistake_log_entries(reviewAt);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_isFixed ON mistake_log_entries(isFixed);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_createdAt ON mistake_log_entries(createdAt);
+CREATE INDEX IF NOT EXISTS index_mistake_log_entries_deletedAt ON mistake_log_entries(deletedAt);
+
+-- ============================================================
+-- Flashcard deck-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS flashcards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    deckId INTEGER NOT NULL,
+    frontText TEXT NOT NULL,
+    backText TEXT NOT NULL,
+    hint TEXT,
+    imagePath TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    syncConfig TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER,
+    FOREIGN KEY(deckId) REFERENCES flashcard_decks(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_flashcards_deckId ON flashcards(deckId);
+CREATE INDEX IF NOT EXISTS index_flashcards_sourceQuestionId ON flashcards(sourceQuestionId);
+CREATE INDEX IF NOT EXISTS index_flashcards_dueAt ON flashcards(dueAt);
+CREATE INDEX IF NOT EXISTS index_flashcards_deletedAt ON flashcards(deletedAt);
+
+CREATE TABLE IF NOT EXISTS learning_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    deckId INTEGER NOT NULL,
+    label TEXT,
+    stateJson TEXT NOT NULL,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER,
+    FOREIGN KEY(deckId) REFERENCES flashcard_decks(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_learning_sessions_deckId ON learning_sessions(deckId);
+CREATE INDEX IF NOT EXISTS index_learning_sessions_deletedAt ON learning_sessions(deletedAt);
+
+-- ============================================================
+-- Slideshow course-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS course_slides (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    courseId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    speakerNotes TEXT,
+    imagePath TEXT,
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    tags TEXT NOT NULL DEFAULT '[]',
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    syncConfig TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER,
+    FOREIGN KEY(courseId) REFERENCES slideshow_courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_course_slides_courseId ON course_slides(courseId);
+CREATE INDEX IF NOT EXISTS index_course_slides_sourceQuestionId ON course_slides(sourceQuestionId);
+CREATE INDEX IF NOT EXISTS index_course_slides_deletedAt ON course_slides(deletedAt);
+
+-- ============================================================
+-- Note collection-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS note_blueprints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    collectionId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    summary TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    body TEXT NOT NULL,
+    bulletPoints TEXT NOT NULL DEFAULT '[]',
+    tags TEXT NOT NULL DEFAULT '[]',
+    blueprintMode TEXT NOT NULL DEFAULT 'SIMPLE_NOTE',
+    linkedQuestionsJson TEXT NOT NULL DEFAULT '[]',
+    linkedAssetsJson TEXT NOT NULL DEFAULT '[]',
+    reviewStatus TEXT NOT NULL DEFAULT 'NEW',
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    deletedAt INTEGER,
+    FOREIGN KEY(collectionId) REFERENCES note_collections(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_note_blueprints_collectionId ON note_blueprints(collectionId);
+CREATE INDEX IF NOT EXISTS index_note_blueprints_sourceQuestionId ON note_blueprints(sourceQuestionId);
+CREATE INDEX IF NOT EXISTS index_note_blueprints_blueprintMode ON note_blueprints(blueprintMode);
+CREATE INDEX IF NOT EXISTS index_note_blueprints_reviewStatus ON note_blueprints(reviewStatus);
+CREATE INDEX IF NOT EXISTS index_note_blueprints_deletedAt ON note_blueprints(deletedAt);
+
+-- ============================================================
+-- Prompt deck-dependent tables
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS prompt_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    deckId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    promptText TEXT NOT NULL,
+    variablesJson TEXT,
+    outputType TEXT NOT NULL,
+    tags TEXT NOT NULL DEFAULT '[]',
+    usageCount INTEGER NOT NULL DEFAULT 0,
+    lastUsedAt INTEGER,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER,
+    FOREIGN KEY(deckId) REFERENCES prompt_decks(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_prompt_cards_deckId ON prompt_cards(deckId);
+CREATE INDEX IF NOT EXISTS index_prompt_cards_outputType ON prompt_cards(outputType);
+CREATE INDEX IF NOT EXISTS index_prompt_cards_deletedAt ON prompt_cards(deletedAt);
+
+CREATE TABLE IF NOT EXISTS prompt_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    promptCardId INTEGER NOT NULL,
+    inputValuesJson TEXT NOT NULL,
+    renderedPrompt TEXT NOT NULL,
+    outputText TEXT,
+    linkedAssetType TEXT,
+    linkedAssetId INTEGER,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER,
+    FOREIGN KEY(promptCardId) REFERENCES prompt_cards(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS index_prompt_runs_promptCardId ON prompt_runs(promptCardId);
+CREATE INDEX IF NOT EXISTS index_prompt_runs_createdAt ON prompt_runs(createdAt);
+CREATE INDEX IF NOT EXISTS index_prompt_runs_deletedAt ON prompt_runs(deletedAt);

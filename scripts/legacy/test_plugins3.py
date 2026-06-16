@@ -1,0 +1,11 @@
+with open("app/build.gradle.kts", "r") as f:
+    lines = f.readlines()
+
+new_lines = []
+for line in lines:
+    if "id(\"org.jetbrains.kotlin.plugin.serialization\")" in line or "id(\"com.google.devtools.ksp\")" in line:
+        continue
+    new_lines.append(line)
+
+with open("app/build.gradle.kts", "w") as f:
+    f.writelines(new_lines)

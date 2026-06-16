@@ -1,0 +1,48 @@
+-- Mistake log and category queries
+
+mk_selectByQuestion:
+SELECT * FROM mistake_log_entries WHERE questionId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;
+
+mk_selectByBook:
+SELECT * FROM mistake_log_entries WHERE bookId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;
+
+mk_selectUnfixed:
+SELECT * FROM mistake_log_entries WHERE isFixed = 0 AND deletedAt IS NULL ORDER BY reviewAt ASC;
+
+mk_insert:
+INSERT INTO mistake_log_entries (
+    bookId, quizId, questionId, sessionId,
+    selectedAnswer, correctAnswer,
+    userReason, correctConcept, preventionNote,
+    linkedFlashcardId, linkedBlueprintId, linkedAssetId,
+    isFixed, reviewAt, createdAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+mk_markFixed:
+UPDATE mistake_log_entries SET isFixed = 1, updatedAt = ? WHERE id = ?;
+
+mk_softDelete:
+UPDATE mistake_log_entries SET deletedAt = ? WHERE id = ?;
+
+-- Question category queries
+qc_selectByQuestion:
+SELECT category FROM question_categories WHERE questionId = ? AND deletedAt IS NULL;
+
+qc_insert:
+INSERT OR IGNORE INTO question_categories (questionId, category) VALUES (?, ?);
+
+qc_deleteByQuestion:
+DELETE FROM question_categories WHERE questionId = ?;
+
+-- Category metadata queries
+cm_selectAll:
+SELECT * FROM category_metadata WHERE deletedAt IS NULL ORDER BY isPinned DESC;
+
+cm_upsert:
+INSERT OR REPLACE INTO category_metadata (name, emoji, color, isPinned) VALUES (?, ?, ?, ?);
+
+cm_rename:
+UPDATE category_metadata SET name = ? WHERE name = ?;
+
+cm_softDelete:
+UPDATE category_metadata SET deletedAt = ? WHERE name = ?;

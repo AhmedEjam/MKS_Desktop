@@ -1,0 +1,1035 @@
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/AndroidManifest.xml mks_repair_work/MKS-GPT4/app/src/main/AndroidManifest.xml
+--- mks_original_compare/MKS-GPT4/app/src/main/AndroidManifest.xml	2026-05-24 16:19:48.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/AndroidManifest.xml	2026-05-26 06:38:36.420927908 +0000
+@@ -11,7 +11,7 @@
+ 
+     <application
+         android:name=".MksApplication"
+-        android:allowBackup="true"
++        android:allowBackup="false"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+         android:fullBackupContent="@xml/backup_rules"
+         android:icon="@mipmap/ic_launcher"
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/exportfull/MksFullImportExportService.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/exportfull/MksFullImportExportService.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/exportfull/MksFullImportExportService.kt	2026-05-25 23:08:02.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/exportfull/MksFullImportExportService.kt	2026-05-26 06:37:42.217867230 +0000
+@@ -54,7 +54,7 @@
+             val manifest = JSONObject()
+                 .put("appName", "MKS")
+                 .put("exportVersion", 1)
+-                .put("databaseVersion", 21)
++                .put("databaseVersion", MksDatabase.DB_VERSION)
+                 .put("createdAt", System.currentTimeMillis())
+                 .put("includesMedia", false)
+             val warnings = mutableListOf<String>()
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/CsvParser.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/CsvParser.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/CsvParser.kt	2026-05-21 01:28:36.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/CsvParser.kt	2026-05-26 06:38:00.855469828 +0000
+@@ -164,7 +164,7 @@
+         val grouped = supportingCounts.groupingBy { it }.eachCount()
+         val modeFieldCount = grouped.maxWithOrNull(
+             compareBy<Map.Entry<Int, Int>> { it.value }.thenBy { it.key }
+-        )!!.key
++        )?.key ?: 0
+         val modeFrequency = grouped[modeFieldCount] ?: 0
+         val avg = supportingCounts.average()
+         val variance = supportingCounts.map { (it - avg) * (it - avg) }.sum() / supportingCounts.size
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/JsonLibraryParser.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/JsonLibraryParser.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/JsonLibraryParser.kt	2026-05-24 16:35:30.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/JsonLibraryParser.kt	2026-05-26 06:38:13.988522453 +0000
+@@ -51,10 +51,10 @@
+             
+             // Normalize top-level quizzes/quizes
+             if ("quizes" in root && "quizzes" !in root) {
+-                root["quizzes"] = root["quizes"]!!
++                root["quizes"]?.let { root["quizzes"] = it }
+             }
+             if ("bookList" in root && "books" !in root) {
+-                root["books"] = root["bookList"]!!
++                root["bookList"]?.let { root["books"] = it }
+             }
+             
+             // Normalize books
+@@ -63,7 +63,7 @@
+                 root["books"] = JsonArray(books.map { book ->
+                     if (book !is JsonObject) return@map book
+                     val bMap = book.toMutableMap()
+-                    if ("name" in bMap && "title" !in bMap) bMap["title"] = bMap["name"]!!
++                    bMap["name"]?.let { if ("title" !in bMap) bMap["title"] = it }
+                     JsonObject(bMap)
+                 })
+             }
+@@ -97,14 +97,14 @@
+                     if (quiz !is JsonObject) return@map quiz
+                     val qMap = quiz.toMutableMap()
+                     
+-                    if ("name" in qMap && "title" !in qMap) qMap["title"] = qMap["name"]!!
++                    qMap["name"]?.let { if ("title" !in qMap) qMap["title"] = it }
+                     
+                     // quizzes items -> questions
+                     if ("items" in qMap && "questions" !in qMap) {
+-                        qMap["questions"] = qMap["items"]!!
++                        qMap["items"]?.let { qMap["questions"] = it }
+                     }
+                     if ("questionList" in qMap && "questions" !in qMap) {
+-                        qMap["questions"] = qMap["questionList"]!!
++                        qMap["questionList"]?.let { qMap["questions"] = it }
+                     }
+                     
+                     val questions = qMap["questions"]
+@@ -114,8 +114,10 @@
+                             val questMap = question.toMutableMap()
+                             
+                             // stem aliases
+-                            if ("question" in questMap && "stem" !in questMap) questMap["stem"] = questMap["question"]!!
+-                            else if ("text" in questMap && "stem" !in questMap) questMap["stem"] = questMap["text"]!!
++                            if ("stem" !in questMap) {
++                                questMap["question"]?.let { questMap["stem"] = it }
++                                    ?: questMap["text"]?.let { questMap["stem"] = it }
++                            }
+                             
+                             // options aliases: can be List<String> or List<JsonObject>
+                             var options = questMap["options"] ?: questMap["answers"] ?: questMap["choices"] ?: questMap["optionList"]
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/ZipLibraryParser.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/ZipLibraryParser.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/ZipLibraryParser.kt	2026-05-24 16:41:44.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/import/parser/ZipLibraryParser.kt	2026-05-26 06:40:59.441342603 +0000
+@@ -102,7 +102,7 @@
+                 json.decodeFromString(ManifestDto.serializer(), it.readTextWithLimit(ImportLimits.MAX_TEXT_IMPORT_BYTES))
+             }
+ 
+-            return ZipResult(bundle, manifest, libraryJsonFile.parentFile!!, tempDir)
++            return ZipResult(bundle, manifest, libraryJsonFile.parentFile ?: tempDir, tempDir)
+         } catch (e: Exception) {
+             tempDir.deleteRecursively()
+             throw e
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/Converters.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/Converters.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/Converters.kt	2026-05-21 01:28:36.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/Converters.kt	2026-05-26 06:36:04.840802449 +0000
+@@ -34,7 +34,11 @@
+ 
+     @TypeConverter
+     fun toIntList(value: String): List<Int> {
+-        return moshi.adapter<List<Int>>(intListType).fromJson(value) ?: emptyList()
++        return try {
++            moshi.adapter<List<Int>>(intListType).fromJson(value) ?: emptyList()
++        } catch (e: Exception) {
++            emptyList()
++        }
+     }
+ 
+     private val listIntType = Types.newParameterizedType(List::class.java, Int::class.javaObjectType)
+@@ -132,12 +136,20 @@
+ 
+     @TypeConverter
+     fun fromStringMap(map: Map<String, Boolean>): String {
+-        return moshi.adapter<Map<String, Boolean>>(mapStringType).toJson(map)
++        return try {
++            moshi.adapter<Map<String, Boolean>>(mapStringType).toJson(map)
++        } catch (e: Exception) {
++            "{}"
++        }
+     }
+ 
+     @TypeConverter
+     fun toStringMap(value: String): Map<String, Boolean> {
+-        return moshi.adapter<Map<String, Boolean>>(mapStringType).fromJson(value) ?: emptyMap()
++        return try {
++            moshi.adapter<Map<String, Boolean>>(mapStringType).fromJson(value) ?: emptyMap()
++        } catch (e: Exception) {
++            emptyMap()
++        }
+     }
+ 
+     private val mapStringType: ParameterizedType =
+@@ -150,6 +162,7 @@
+ 
+     @TypeConverter
+     fun toQuestionType(value: String): QuestionType {
+-        return QuestionType.valueOf(value)
++        return runCatching { QuestionType.valueOf(value) }
++            .getOrDefault(QuestionType.SINGLE_CHOICE)
+     }
+ }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/MksDatabase.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/MksDatabase.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/MksDatabase.kt	2026-05-25 23:06:44.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/MksDatabase.kt	2026-05-26 06:37:42.216857210 +0000
+@@ -38,6 +38,8 @@
+ import com.ahmedyejam.mks.data.local.dao.MistakeLogDao
+ import com.ahmedyejam.mks.data.local.dao.GlobalSearchDao
+ 
++const val MKS_DATABASE_VERSION = 21
++
+ @Database(
+     entities = [
+         BookEntity::class,
+@@ -62,7 +64,7 @@
+         SourceDocumentEntity::class,
+         MistakeLogEntryEntity::class
+     ],
+-    version = 21,
++    version = MKS_DATABASE_VERSION,
+     exportSchema = true
+ )
+ @TypeConverters(Converters::class)
+@@ -92,6 +94,7 @@
+ 
+     companion object {
+         const val DATABASE_NAME = "mks_database"
++        const val DB_VERSION = MKS_DATABASE_VERSION
+ 
+ 
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/BookDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/BookDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/BookDao.kt	2026-05-21 01:28:36.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/BookDao.kt	2026-05-26 06:36:26.480408422 +0000
+@@ -9,6 +9,9 @@
+     @Query("SELECT * FROM books")
+     fun getAllBooksFlow(): Flow<List<BookEntity>>
+ 
++    @Query("SELECT COUNT(*) FROM books")
++    suspend fun countAll(): Int
++
+     @Query("""
+         SELECT * FROM books 
+         ORDER BY 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDao.kt	2026-05-25 23:07:19.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDao.kt	2026-05-26 06:36:24.693918002 +0000
+@@ -18,14 +18,29 @@
+     @Query("SELECT * FROM flashcards WHERE id IN (:ids) ORDER BY orderIndex ASC")
+     suspend fun getFlashcardsByIds(ids: List<Long>): List<FlashcardEntity>
+ 
++    @Query("SELECT COUNT(*) FROM flashcards")
++    suspend fun countAll(): Int
++
+     @Query("SELECT COUNT(*) FROM flashcards WHERE deckId = :deckId")
+     suspend fun countCardsInDeck(deckId: Long): Int
+ 
++    @Query("SELECT COUNT(*) FROM flashcards WHERE attempts >= 2 AND correctCount * 2 < attempts")
++    suspend fun countWeakFlashcards(): Int
+ 
+-    @Query("SELECT * FROM flashcards WHERE dueAt > 0 AND dueAt <= :now ORDER BY dueAt ASC LIMIT :limit")
++    @Query("""
++        SELECT * FROM flashcards
++        WHERE (dueAt > 0 AND dueAt <= :now)
++           OR (dueAt = 0 AND lastReviewedAt = 0)
++        ORDER BY dueAt ASC, createdAt ASC
++        LIMIT :limit
++    """)
+     suspend fun getDueFlashcards(now: Long, limit: Int = 50): List<FlashcardEntity>
+ 
+-    @Query("SELECT COUNT(*) FROM flashcards WHERE dueAt > 0 AND dueAt <= :now")
++    @Query("""
++        SELECT COUNT(*) FROM flashcards
++        WHERE (dueAt > 0 AND dueAt <= :now)
++           OR (dueAt = 0 AND lastReviewedAt = 0)
++    """)
+     suspend fun countDueFlashcards(now: Long): Int
+ 
+     @Query("UPDATE flashcards SET lastReviewedAt = :reviewedAt, dueAt = :nextDueAt, reviewCount = reviewCount + 1, updatedAt = :reviewedAt WHERE id = :id")
+@@ -37,19 +52,6 @@
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     suspend fun insertFlashcard(card: FlashcardEntity): Long
+ 
+-
+-    @Query("SELECT * FROM flashcards WHERE dueAt > 0 AND dueAt <= :now ORDER BY dueAt ASC LIMIT :limit")
+-    suspend fun getDueFlashcards(now: Long, limit: Int = 50): List<FlashcardEntity>
+-
+-    @Query("SELECT COUNT(*) FROM flashcards WHERE dueAt > 0 AND dueAt <= :now")
+-    suspend fun countDueFlashcards(now: Long): Int
+-
+-    @Query("UPDATE flashcards SET lastReviewedAt = :reviewedAt, dueAt = :nextDueAt, reviewCount = reviewCount + 1, updatedAt = :reviewedAt WHERE id = :id")
+-    suspend fun markReviewed(id: Long, reviewedAt: Long, nextDueAt: Long)
+-
+-    @Query("UPDATE flashcards SET dueAt = :dueAt, updatedAt = :updatedAt WHERE id = :id")
+-    suspend fun snooze(id: Long, dueAt: Long, updatedAt: Long)
+-
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     suspend fun insertFlashcards(cards: List<FlashcardEntity>): List<Long>
+ 
+@@ -65,4 +67,3 @@
+     @Query("UPDATE flashcards SET orderIndex = :orderIndex, updatedAt = :updatedAt WHERE id = :cardId")
+     suspend fun updateCardOrder(cardId: Long, orderIndex: Int, updatedAt: Long)
+ }
+-
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDeckDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDeckDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDeckDao.kt	2026-05-25 06:48:47.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/FlashcardDeckDao.kt	2026-05-26 06:36:26.481715676 +0000
+@@ -15,6 +15,9 @@
+     @Query("SELECT * FROM flashcard_decks WHERE id = :id")
+     fun observeFlashcardDeckById(id: Long): Flow<FlashcardDeckEntity?>
+ 
++    @Query("SELECT COUNT(*) FROM flashcard_decks")
++    suspend fun countAll(): Int
++
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     suspend fun insertFlashcardDeck(deck: FlashcardDeckEntity): Long
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/MistakeLogDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/MistakeLogDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/MistakeLogDao.kt	2026-05-25 23:05:10.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/MistakeLogDao.kt	2026-05-26 06:36:43.128675100 +0000
+@@ -26,6 +26,9 @@
+     @Query("SELECT * FROM mistake_log_entries WHERE id = :id")
+     suspend fun getMistakeById(id: Long): MistakeLogEntryEntity?
+ 
++    @Query("SELECT * FROM mistake_log_entries WHERE questionId = :questionId AND ((:sessionId IS NULL AND sessionId IS NULL) OR sessionId = :sessionId) LIMIT 1")
++    suspend fun findByQuestionAndSession(questionId: Long, sessionId: Long?): MistakeLogEntryEntity?
++
+     @Query("SELECT * FROM mistake_log_entries WHERE isFixed = 0 AND reviewAt IS NOT NULL AND reviewAt <= :now ORDER BY reviewAt ASC, createdAt DESC LIMIT :limit")
+     suspend fun getDueMistakes(now: Long, limit: Int = 50): List<MistakeLogEntryEntity>
+ 
+@@ -38,6 +41,9 @@
+     @Query("SELECT COUNT(*) FROM mistake_log_entries WHERE isFixed = 0 AND reviewAt IS NOT NULL AND reviewAt <= :now")
+     suspend fun countDueMistakes(now: Long): Int
+ 
++    @Query("SELECT COUNT(*) FROM mistake_log_entries WHERE isFixed = 0 AND reviewAt IS NOT NULL AND reviewAt > :now")
++    suspend fun countPendingMistakes(now: Long): Int
++
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     suspend fun insertMistake(entry: MistakeLogEntryEntity): Long
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/NoteBlueprintDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/NoteBlueprintDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/NoteBlueprintDao.kt	2026-05-25 23:07:19.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/NoteBlueprintDao.kt	2026-05-26 06:36:57.185205755 +0000
+@@ -27,17 +27,23 @@
+     fun getNotesByLinkedQuestion(bookId: Long, questionId: Long): Flow<List<NoteBlueprintEntity>>
+ 
+ 
+-    @Query("SELECT * FROM note_blueprints WHERE reviewStatus != 'REVIEWED' ORDER BY lastReviewedAt ASC, updatedAt DESC LIMIT :limit")
+-    suspend fun getDueBlueprints(limit: Int = 50): List<NoteBlueprintEntity>
++    @Query("SELECT COUNT(*) FROM note_blueprints")
++    suspend fun countAll(): Int
+ 
+-    @Query("SELECT COUNT(*) FROM note_blueprints WHERE reviewStatus != 'REVIEWED'")
+-    suspend fun countDueBlueprints(): Int
++    @Query("SELECT COUNT(*) FROM note_blueprints WHERE sourceQuestionId IS NOT NULL OR linkedQuestionsJson != '[]' OR linkedAssetsJson != '[]'")
++    suspend fun countLinkedBlueprints(): Int
++
++    @Query("SELECT * FROM note_blueprints WHERE reviewStatus != 'REVIEWED' AND updatedAt <= :now ORDER BY lastReviewedAt ASC, updatedAt DESC LIMIT :limit")
++    suspend fun getDueBlueprints(now: Long, limit: Int = 50): List<NoteBlueprintEntity>
++
++    @Query("SELECT COUNT(*) FROM note_blueprints WHERE reviewStatus != 'REVIEWED' AND updatedAt <= :now")
++    suspend fun countDueBlueprints(now: Long): Int
+ 
+     @Query("UPDATE note_blueprints SET reviewStatus = 'REVIEWED', reviewCount = reviewCount + 1, lastReviewedAt = :reviewedAt, updatedAt = :reviewedAt WHERE id = :id")
+     suspend fun markReviewed(id: Long, reviewedAt: Long)
+ 
+-    @Query("UPDATE note_blueprints SET reviewStatus = 'REVIEWING', updatedAt = :updatedAt WHERE id = :id")
+-    suspend fun snoozeBlueprint(id: Long, updatedAt: Long)
++    @Query("UPDATE note_blueprints SET reviewStatus = 'REVIEWING', updatedAt = :nextReviewAt WHERE id = :id")
++    suspend fun snoozeBlueprint(id: Long, nextReviewAt: Long)
+ 
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     suspend fun insertNote(note: NoteBlueprintEntity): Long
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionAssetDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionAssetDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionAssetDao.kt	2026-05-25 06:47:30.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionAssetDao.kt	2026-05-26 06:36:43.128013728 +0000
+@@ -32,6 +32,12 @@
+     @Query("SELECT DISTINCT questionId FROM question_assets WHERE quizId = :quizId")
+     fun getQuestionIdsWithAssetsForQuizFlow(quizId: Long): Flow<List<Long>>
+ 
++    @Query("SELECT COUNT(DISTINCT questionId) FROM question_assets")
++    suspend fun countDistinctQuestionsWithAssets(): Int
++
++    @Query("SELECT COUNT(DISTINCT questionId) FROM question_assets WHERE sourceDocumentId IS NOT NULL")
++    suspend fun countDistinctQuestionsWithSources(): Int
++
+     @Query("SELECT COUNT(*) FROM question_assets WHERE questionId = :questionId")
+     fun getAssetCountForQuestion(questionId: Long): Flow<Int>
+ 
+@@ -55,4 +61,7 @@
+ 
+     @Query("UPDATE question_assets SET isPrimary = 0, updatedAt = :updatedAt WHERE questionId = :questionId AND id != :assetId")
+     suspend fun clearOtherPrimaryAssets(questionId: Long, assetId: Long, updatedAt: Long)
++
++    @Query("UPDATE question_assets SET sourceDocumentId = NULL, updatedAt = :updatedAt WHERE sourceDocumentId = :sourceId")
++    suspend fun clearSourceReference(sourceId: Long, updatedAt: Long)
+ }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionDao.kt	2026-05-25 23:06:11.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionDao.kt	2026-05-26 06:36:43.127336526 +0000
+@@ -100,6 +100,28 @@
+     @Query("SELECT * FROM questions")
+     fun getAllQuestionsFlow(): Flow<List<QuestionEntity>>
+ 
++    @Query("SELECT COUNT(*) FROM questions")
++    suspend fun countAll(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE attempts = 0")
++    suspend fun countUnanswered(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE notes IS NOT NULL AND TRIM(notes) != ''")
++    suspend fun countWithNotes(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE isMarked = 1")
++    suspend fun countMarked(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE isDropped = 1")
++    suspend fun countDropped(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE attempts > 0 AND (correctCount < attempts OR lastAttemptResult = 0)")
++    suspend fun countMissed(): Int
++
++    @Query("SELECT COUNT(*) FROM questions WHERE attempts >= 2 AND correctCount * 2 < attempts")
++    suspend fun countWeak(): Int
++
++
+     @Query("UPDATE questions SET categories = '[]', updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE categories IS NOT NULL AND categories != '[]'")
+     suspend fun clearAllQuestionCategories(updatedAt: Long)
+ 
+@@ -116,12 +138,18 @@
+     @Query("SELECT * FROM questions WHERE isDropped = 1 ORDER BY droppedAt DESC, updatedAt DESC")
+     suspend fun getDroppedQuestions(): List<QuestionEntity>
+ 
+-    @Query("UPDATE questions SET isMarked = 0, markedAt = NULL, markReason = NULL, updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE quizId = :quizId AND isMarked = 1")
++    @Query("UPDATE questions SET isMarked = 0, markedAt = NULL, markReason = NULL, markReviewAt = NULL, updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE quizId = :quizId AND isMarked = 1")
+     suspend fun clearMarksForQuiz(quizId: Long, updatedAt: Long)
+ 
+-    @Query("UPDATE questions SET isMarked = 0, markedAt = NULL, markReason = NULL, updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE quizId IN (SELECT id FROM quizzes WHERE bookId = :bookId) AND isMarked = 1")
++    @Query("UPDATE questions SET isMarked = 0, markedAt = NULL, markReason = NULL, markReviewAt = NULL, updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE quizId IN (SELECT id FROM quizzes WHERE bookId = :bookId) AND isMarked = 1")
+     suspend fun clearMarksForBook(bookId: Long, updatedAt: Long)
+ 
++    @Query("UPDATE questions SET isMarked = 0, markedAt = NULL, markReason = NULL, markReviewAt = NULL, updatedAt = :updatedAt, lastEditedAt = :updatedAt WHERE id = :questionId")
++    suspend fun clearQuestionMark(questionId: Long, updatedAt: Long)
++
++    @Query("UPDATE questions SET lastStudiedAt = :reviewedAt, updatedAt = :reviewedAt WHERE id = :questionId")
++    suspend fun markQuestionReviewed(questionId: Long, reviewedAt: Long)
++
+     @Query("SELECT * FROM questions WHERE attempts > 0 AND correctCount < attempts ORDER BY updatedAt DESC LIMIT :limit")
+     suspend fun getWeakQuestions(limit: Int = 50): List<QuestionEntity>
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuizDao.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuizDao.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuizDao.kt	2026-05-21 01:28:36.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuizDao.kt	2026-05-26 06:36:26.481085587 +0000
+@@ -71,6 +71,9 @@
+     @Query("SELECT * FROM quizzes")
+     fun getAllQuizzesFlow(): Flow<List<QuizEntity>>
+ 
++    @Query("SELECT COUNT(*) FROM quizzes")
++    suspend fun countAll(): Int
++
+     @Query("SELECT DISTINCT category FROM quizzes WHERE category IS NOT NULL")
+     fun getAllCategories(): Flow<List<String>>
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt	2026-05-21 01:28:36.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt	2026-05-26 06:40:59.442053012 +0000
+@@ -270,14 +270,14 @@
+                 else -> null
+             }
+             if (!img.isNullOrBlank()) {
+-                if (successfullyProcessedAssets.containsKey(img)) {
++                successfullyProcessedAssets[img]?.let { processedFile ->
+                     val fileName = generateSafeFileName("book", book.id, img)
+                     val zipPath = "assets/$fileName"
+-                    zipPathsToInclude[zipPath] = successfullyProcessedAssets[img]!!
++                    zipPathsToInclude[zipPath] = processedFile
+                     manifestAssets[img] = zipPath
+                     manifestAssets[zipPath] = zipPath
+                     book.copy(coverImage = zipPath)
+-                } else {
++                } ?: run {
+                     // Portability: only remove non-portable path if processing failed
+                     // If it's a URL or relative path, keep it so it's not silent data loss
+                     if (img.startsWith("/") || img.contains("\\")) {
+@@ -296,14 +296,14 @@
+ 
+             var currentQuiz = quiz
+             if (!quizImage.isNullOrBlank()) {
+-                if (successfullyProcessedAssets.containsKey(quizImage)) {
++                successfullyProcessedAssets[quizImage]?.let { processedFile ->
+                     val fileName = generateSafeFileName("quiz", quiz.id, quizImage)
+                     val zipPath = "assets/$fileName"
+-                    zipPathsToInclude[zipPath] = successfullyProcessedAssets[quizImage]!!
++                    zipPathsToInclude[zipPath] = processedFile
+                     manifestAssets[quizImage] = zipPath
+                     manifestAssets[zipPath] = zipPath
+                     currentQuiz = currentQuiz.copy(coverImage = zipPath)
+-                } else {
++                } ?: run {
+                     if (quizImage.startsWith("/") || quizImage.contains("\\")) {
+                         currentQuiz = currentQuiz.copy(coverImage = "")
+                     }
+@@ -318,14 +318,14 @@
+                 }
+ 
+                 if (!qImage.isNullOrBlank()) {
+-                    if (successfullyProcessedAssets.containsKey(qImage)) {
++                    successfullyProcessedAssets[qImage]?.let { processedFile ->
+                         val fileName = generateSafeFileName("q", q.id, qImage)
+                         val zipPath = "assets/$fileName"
+-                        zipPathsToInclude[zipPath] = successfullyProcessedAssets[qImage]!!
++                        zipPathsToInclude[zipPath] = processedFile
+                         manifestAssets[qImage] = zipPath
+                         manifestAssets[zipPath] = zipPath
+                         q.copy(imageDataUrl = zipPath, imageSource = zipPath)
+-                    } else {
++                    } ?: run {
+                         if (qImage.startsWith("/") || qImage.contains("\\")) {
+                             q.copy(imageDataUrl = "", imageSource = "")
+                         } else q
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/MksRepository.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/MksRepository.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/MksRepository.kt	2026-05-25 23:10:31.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/repository/MksRepository.kt	2026-05-26 06:40:59.440732700 +0000
+@@ -50,6 +50,7 @@
+     val openMistakes: Int = 0,
+     val fixedMistakes: Int = 0,
+     val mistakesDueForReview: Int = 0,
++    val pendingMistakesForReview: Int = 0,
+     val reviewSchedulesDue: Int = 0
+ )
+ 
+@@ -194,6 +195,9 @@
+         selectedAnswer: String?,
+         correctAnswer: String?
+     ): Long {
++        val existing = mistakeLogDao.findByQuestionAndSession(questionId, sessionId)
++        if (existing != null) return existing.id
++
+         val now = System.currentTimeMillis()
+         return mistakeLogDao.insertMistake(
+             MistakeLogEntryEntity(
+@@ -229,10 +233,10 @@
+     }
+ 
+     private suspend fun registerAssetReference(ownerType: String, ownerId: Long, path: String?) {
+-        if (!isTrackableLocalAsset(path)) return
++        val assetPath = path?.trim()?.takeIf { isTrackableLocalAsset(it) } ?: return
+         assetReferenceDao.insertReference(
+             AssetReferenceEntity(
+-                path = path!!.trim(),
++                path = assetPath,
+                 ownerType = ownerType,
+                 ownerId = ownerId
+             )
+@@ -257,8 +261,7 @@
+     }
+ 
+     private suspend fun releaseAssetReference(ownerType: String, ownerId: Long, path: String?) {
+-        if (!isTrackableLocalAsset(path)) return
+-        val assetPath = path!!.trim()
++        val assetPath = path?.trim()?.takeIf { isTrackableLocalAsset(it) } ?: return
+         assetReferenceDao.deleteReference(ownerType, ownerId, assetPath)
+         if (assetReferenceDao.countReferencesForPath(assetPath) == 0) {
+             fileManager.deleteImage(assetPath)
+@@ -626,6 +629,7 @@
+     }
+ 
+     suspend fun deleteSourceDocument(source: SourceDocumentEntity) {
++        questionAssetDao.clearSourceReference(source.id, System.currentTimeMillis())
+         releaseOwnerAssets("source_document", source.id)
+         sourceDocumentDao.deleteSource(source)
+     }
+@@ -1441,22 +1445,30 @@
+     }
+ 
+     suspend fun rateFlashcard(card: FlashcardEntity, rating: String) {
+-        val normalized = rating.lowercase()
++        val now = System.currentTimeMillis()
++        val normalized = rating.lowercase().trim().ifBlank { "good" }
+         val correctIncrement = when (normalized) {
+-            "easy" -> 1
+-            "good" -> 1
++            "easy", "good" -> 1
+             else -> 0
+         }
++        val day = 24L * 60L * 60L * 1000L
++        val nextDueAt = when (normalized) {
++            "again" -> now + 10L * 60L * 1000L
++            "easy" -> now + maxOf(3L, (card.reviewCount + 1L) * 2L) * day
++            "good" -> now + maxOf(1L, card.reviewCount + 1L) * day
++            else -> now + day
++        }
+         val updated = card.copy(
+             attempts = card.attempts + 1,
+             correctCount = card.correctCount + correctIncrement,
+             difficulty = normalized,
+-            lastReviewedAt = System.currentTimeMillis(),
+-            updatedAt = System.currentTimeMillis()
++            lastReviewedAt = now,
++            updatedAt = now
+         )
+         updateFlashcard(updated)
++        flashcardDao.markReviewed(card.id, now, nextDueAt)
+         val deck = flashcardDeckDao.getFlashcardDeckById(card.deckId)
+-        deck?.let { flashcardDeckDao.updateFlashcardDeck(it.copy(lastStudiedAt = System.currentTimeMillis())) }
++        deck?.let { flashcardDeckDao.updateFlashcardDeck(it.copy(lastStudiedAt = now, updatedAt = now)) }
+     }
+ 
+     private suspend fun refreshFlashcardDeckStats(deckId: Long): FlashcardDeckEntity? {
+@@ -1800,49 +1812,34 @@
+     }
+ 
+     suspend fun getLibraryKnowledgeSummary(): KnowledgeSummary {
+-        val books = bookDao.getAllBooksFlow().first()
+-        val quizzes = quizDao.getAllQuizzesFlow().first()
+-        val questions = questionDao.getAllQuestionsFlow().first()
+-        val now = System.currentTimeMillis()
+-        val allBlueprints = mutableListOf<NoteBlueprintEntity>()
+-        val allAssets = mutableListOf<QuestionAssetEntity>()
+-        val allFlashcardDecks = mutableListOf<FlashcardDeckEntity>()
+-        val allFlashcards = mutableListOf<FlashcardEntity>()
+-        for (book in books) {
+-            allBlueprints += noteBlueprintDao.getNotesByBookIdNow(book.id)
+-            allAssets += questionAssetDao.getAssetsByBookId(book.id).first()
+-            val decks = flashcardDeckDao.getFlashcardDecksByBookId(book.id).first()
+-            allFlashcardDecks += decks
+-            for (deck in decks) {
+-                allFlashcards += flashcardDao.getFlashcardsByDeckId(deck.id).first()
+-            }
+-        }
++        val now = System.currentTimeMillis()
+         return KnowledgeSummary(
+-            totalBooks = books.size,
+-            totalQuizzes = quizzes.size,
+-            totalQuestions = questions.size,
+-            unansweredQuestions = questions.count { it.attempts == 0 },
+-            questionsWithNotes = questions.count { !it.notes.isNullOrBlank() },
+-            questionsWithAssets = allAssets.map { it.questionId }.distinct().size,
+-            questionsWithSources = allAssets.filter { it.sourceDocumentId != null }.map { it.questionId }.distinct().size,
+-            markedQuestions = questions.count { it.isMarked },
+-            droppedQuestions = questions.count { it.isDropped },
+-            missedQuestions = questions.count { it.attempts > 0 && (it.correctCount < it.attempts || it.lastAttemptResult == false) },
+-            weakQuestions = questions.count { it.attempts >= 2 && it.correctCount * 2 < it.attempts },
+-            flashcardDecks = allFlashcardDecks.size,
+-            totalFlashcards = allFlashcards.size,
+-            dueFlashcards = allFlashcards.count { it.dueAt > 0L && it.dueAt <= now || it.lastReviewedAt == 0L },
+-            weakFlashcards = allFlashcards.count { it.attempts >= 2 && it.correctCount * 2 < it.attempts },
+-            totalBlueprints = allBlueprints.size,
+-            blueprintsDueForReview = allBlueprints.count { it.lastReviewedAt == 0L || now - it.lastReviewedAt > 604_800_000L },
+-            linkedBlueprints = allBlueprints.count { it.sourceQuestionId != null || it.linkedQuestionsJson != "[]" || it.linkedAssetsJson != "[]" },
++            totalBooks = bookDao.countAll(),
++            totalQuizzes = quizDao.countAll(),
++            totalQuestions = questionDao.countAll(),
++            unansweredQuestions = questionDao.countUnanswered(),
++            questionsWithNotes = questionDao.countWithNotes(),
++            questionsWithAssets = questionAssetDao.countDistinctQuestionsWithAssets(),
++            questionsWithSources = questionAssetDao.countDistinctQuestionsWithSources(),
++            markedQuestions = questionDao.countMarked(),
++            droppedQuestions = questionDao.countDropped(),
++            missedQuestions = questionDao.countMissed(),
++            weakQuestions = questionDao.countWeak(),
++            flashcardDecks = flashcardDeckDao.countAll(),
++            totalFlashcards = flashcardDao.countAll(),
++            dueFlashcards = flashcardDao.countDueFlashcards(now),
++            weakFlashcards = flashcardDao.countWeakFlashcards(),
++            totalBlueprints = noteBlueprintDao.countAll(),
++            blueprintsDueForReview = noteBlueprintDao.countDueBlueprints(now),
++            linkedBlueprints = noteBlueprintDao.countLinkedBlueprints(),
+             promptDecks = promptDeckDao.countAll(),
+             promptCards = promptCardDao.countAll(),
+             promptRuns = promptRunDao.countAll(),
+             savedPromptOutputs = promptRunDao.countSavedOutputs(),
+             openMistakes = mistakeLogDao.countOpenMistakes(),
+             fixedMistakes = mistakeLogDao.countFixedMistakes(),
+-            mistakesDueForReview = mistakeLogDao.countDueMistakes(now)
++            mistakesDueForReview = mistakeLogDao.countDueMistakes(now),
++            pendingMistakesForReview = mistakeLogDao.countPendingMistakes(now)
+         )
+     }
+ 
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewModels.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewModels.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewModels.kt	2026-05-25 23:07:30.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewModels.kt	2026-05-26 06:38:21.698287370 +0000
+@@ -6,6 +6,7 @@
+     val dueFlashcards: Int = 0,
+     val dueBlueprints: Int = 0,
+     val dueMistakes: Int = 0,
++    val pendingMistakes: Int = 0,
+     val markedQuestions: Int = 0,
+     val weakQuestions: Int = 0,
+     val unfinishedSlides: Int = 0
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewRepository.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewRepository.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewRepository.kt	2026-05-25 23:07:30.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/data/review/ReviewRepository.kt	2026-05-26 06:38:21.699011256 +0000
+@@ -18,8 +18,9 @@
+     suspend fun loadSummary(now: Long = System.currentTimeMillis()): ReviewDashboardSummary = withContext(Dispatchers.IO) {
+         ReviewDashboardSummary(
+             dueFlashcards = flashcardDao.countDueFlashcards(now),
+-            dueBlueprints = noteBlueprintDao.countDueBlueprints(),
++            dueBlueprints = noteBlueprintDao.countDueBlueprints(now),
+             dueMistakes = mistakeLogDao.countDueMistakes(now),
++            pendingMistakes = mistakeLogDao.countPendingMistakes(now),
+             markedQuestions = questionDao.getMarkedQuestions().size,
+             weakQuestions = questionDao.getWeakQuestions(200).size,
+             unfinishedSlides = courseSlideDao.countUnfinishedSlides()
+@@ -30,7 +31,7 @@
+         val flashcards = flashcardDao.getDueFlashcards(now, 20).map {
+             ReviewQueueItem(it.id.toString(), ReviewQueueType.FLASHCARD, it.frontText.take(90), it.backText.take(120), it.dueAt, "flashcards/${it.deckId}")
+         }
+-        val blueprints = noteBlueprintDao.getDueBlueprints(20).map {
++        val blueprints = noteBlueprintDao.getDueBlueprints(now, 20).map {
+             ReviewQueueItem(it.id.toString(), ReviewQueueType.BLUEPRINT, it.title, it.summary, it.lastReviewedAt, "blueprint/${it.id}")
+         }
+         val mistakes = mistakeLogDao.getDueMistakes(now, 20).map {
+@@ -51,6 +52,8 @@
+             ReviewQueueType.FLASHCARD -> flashcardDao.markReviewed(item.id.toLong(), now, now + 3L * 24L * 60L * 60L * 1000L)
+             ReviewQueueType.BLUEPRINT -> noteBlueprintDao.markReviewed(item.id.toLong(), now)
+             ReviewQueueType.MISTAKE -> mistakeLogDao.markFixed(item.id.toLong(), now)
++            ReviewQueueType.MARKED_QUESTION -> questionDao.clearQuestionMark(item.id.toLong(), now)
++            ReviewQueueType.WEAK_QUESTION -> questionDao.markQuestionReviewed(item.id.toLong(), now)
+             else -> Unit
+         }
+     }
+@@ -61,7 +64,7 @@
+         when (item.type) {
+             ReviewQueueType.FLASHCARD -> flashcardDao.snooze(item.id.toLong(), due, now)
+             ReviewQueueType.MISTAKE -> mistakeLogDao.snooze(item.id.toLong(), due, now)
+-            ReviewQueueType.BLUEPRINT -> noteBlueprintDao.snoozeBlueprint(item.id.toLong(), now)
++            ReviewQueueType.BLUEPRINT -> noteBlueprintDao.snoozeBlueprint(item.id.toLong(), due)
+             else -> Unit
+         }
+     }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsScreen.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsScreen.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsScreen.kt	2026-05-25 23:08:41.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsScreen.kt	2026-05-26 06:44:58.288691201 +0000
+@@ -1,5 +1,7 @@
+ package com.ahmedyejam.mks.ui.data
+ 
++import androidx.activity.compose.rememberLauncherForActivityResult
++import androidx.activity.result.contract.ActivityResultContracts
+ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.fillMaxSize
+@@ -21,12 +23,17 @@
+ import androidx.compose.runtime.getValue
+ import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.remember
++import androidx.compose.runtime.rememberCoroutineScope
+ import androidx.compose.runtime.setValue
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.platform.LocalContext
+ import androidx.compose.ui.unit.dp
+ import com.ahmedyejam.mks.ui.components.ChangePreviewDialog
+ import com.ahmedyejam.mks.ui.components.EmptyStateCard
+ import com.ahmedyejam.mks.ui.components.LoadingErrorState
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
+ 
+ @OptIn(ExperimentalMaterial3Api::class)
+ @Composable
+@@ -35,7 +42,34 @@
+     onBack: () -> Unit
+ ) {
+     val state by viewModel.state.collectAsState()
++    val context = LocalContext.current
++    val scope = rememberCoroutineScope()
+     var importPath by remember { mutableStateOf("") }
++    var saveMessage by remember { mutableStateOf<String?>(null) }
++    var saveError by remember { mutableStateOf<String?>(null) }
++    val saveExportLauncher = rememberLauncherForActivityResult(
++        contract = ActivityResultContracts.CreateDocument("application/zip")
++    ) { uri ->
++        val file = state.lastExport?.file
++        if (uri == null || file == null) return@rememberLauncherForActivityResult
++        scope.launch {
++            runCatching {
++                withContext(Dispatchers.IO) {
++                    file.inputStream().use { input ->
++                        context.contentResolver.openOutputStream(uri)?.use { output ->
++                            input.copyTo(output)
++                        } ?: error("Could not open selected destination.")
++                    }
++                }
++            }.onSuccess {
++                saveError = null
++                saveMessage = "Export saved to selected file."
++            }.onFailure { error ->
++                saveMessage = null
++                saveError = error.message ?: "Could not save export."
++            }
++        }
++    }
+     state.importPreview?.let { preview ->
+         ChangePreviewDialog(
+             result = preview,
+@@ -60,10 +94,16 @@
+             verticalArrangement = Arrangement.spacedBy(12.dp)
+         ) {
+             Text("Full Library Export", style = MaterialTheme.typography.titleMedium)
+-            Text("Creates a ZIP with manifest and JSON dumps of the main learning tables. Media copying is conservative and reported separately.")
++            Text("Creates a ZIP with manifest and JSON dumps of the main learning tables. This repair build exports structured data only; media files are not included yet.")
+             Button(onClick = viewModel::exportFullLibrary, enabled = !state.isWorking) { Text("Export full library") }
+-            LoadingErrorState(state.isWorking, state.error)
++            state.lastExport?.file?.takeIf { state.lastExport?.success == true }?.let { file ->
++                Button(onClick = { saveExportLauncher.launch(file.name) }, enabled = !state.isWorking) {
++                    Text("Save export file")
++                }
++            }
++            LoadingErrorState(state.isWorking, state.error ?: saveError)
+             state.message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
++            saveMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+             state.lastExport?.warnings?.takeIf { it.isNotEmpty() }?.let { warnings ->
+                 EmptyStateCard("Export warnings", warnings.joinToString("\n"))
+             }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsViewModel.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsViewModel.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsViewModel.kt	2026-05-25 23:08:41.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/data/DataToolsViewModel.kt	2026-05-26 06:44:58.289206000 +0000
+@@ -32,7 +32,7 @@
+                 it.copy(
+                     isWorking = false,
+                     lastExport = result,
+-                    message = if (result.success) "Export created: ${result.file?.absolutePath}" else null,
++                    message = if (result.success) "Export created: ${result.file?.name}. Tap Save export file to choose where to store it." else null,
+                     error = result.error
+                 )
+             }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/flashcard/FlashcardDeckScreen.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/flashcard/FlashcardDeckScreen.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/flashcard/FlashcardDeckScreen.kt	2026-05-25 06:52:53.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/flashcard/FlashcardDeckScreen.kt	2026-05-26 06:43:21.720369780 +0000
+@@ -92,15 +92,17 @@
+         }
+     }
+ 
+-    if (showDeckEditor && state.deck != null) {
+-        DeckEditorDialog(
+-            deck = state.deck!!,
+-            onDismiss = { showDeckEditor = false },
+-            onSave = { title, description ->
+-                vm.updateDeck(title, description)
+-                showDeckEditor = false
+-            }
+-        )
++    state.deck?.let { deck ->
++        if (showDeckEditor) {
++            DeckEditorDialog(
++                deck = deck,
++                onDismiss = { showDeckEditor = false },
++                onSave = { title, description ->
++                    vm.updateDeck(title, description)
++                    showDeckEditor = false
++                }
++            )
++        }
+     }
+ 
+     if (showAddCard || showCardEditor != null) {
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryScreen.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryScreen.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryScreen.kt	2026-05-25 22:15:00.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryScreen.kt	2026-05-26 06:39:53.402303383 +0000
+@@ -252,11 +252,11 @@
+             scope.launch {
+                 try {
+                     val result = context.contentResolver.openOutputStream(exportUri)?.use { stream ->
+-                        when {
+-                            pendingExportBookId != null -> viewModel.exportBook(pendingExportBookId!!, stream)
+-                            pendingExportQuizId != null -> viewModel.exportQuiz(pendingExportQuizId!!, stream)
+-                            else -> viewModel.exportAll(stream)
+-                        }
++                        pendingExportBookId?.let { bookId ->
++                            viewModel.exportBook(bookId, stream)
++                        } ?: pendingExportQuizId?.let { quizId ->
++                            viewModel.exportQuiz(quizId, stream)
++                        } ?: viewModel.exportAll(stream)
+                     }
+                     if (result?.success == true) {
+                         val message = if (result.failedAssetCount > 0) {
+@@ -555,10 +555,12 @@
+                         coverUri = cover
+                     )
+                 } else {
+-                    viewModel.updateBook(
+-                        editingBook!!.copy(title = title, description = desc),
+-                        newCoverUri = cover
+-                    )
++                    editingBook?.let { book ->
++                        viewModel.updateBook(
++                            book.copy(title = title, description = desc),
++                            newCoverUri = cover
++                        )
++                    }
+                 }
+                 showBookEditDialog = false
+             }
+@@ -578,10 +580,12 @@
+                 if (editingQuiz == null) {
+                     // Logic to add new quiz if needed
+                 } else {
+-                    viewModel.updateQuiz(
+-                        editingQuiz!!.copy(title = title, description = desc),
+-                        newCoverUri = cover
+-                    )
++                    editingQuiz?.let { quiz ->
++                        viewModel.updateQuiz(
++                            quiz.copy(title = title, description = desc),
++                            newCoverUri = cover
++                        )
++                    }
+                 }
+                 showQuizEditDialog = false
+             }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryViewModel.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryViewModel.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryViewModel.kt	2026-05-25 22:14:51.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/library/LibraryViewModel.kt	2026-05-26 06:36:04.840291751 +0000
+@@ -52,11 +52,11 @@
+     val isSearching = _isSearching.asStateFlow()
+ 
+     val sortBy = dataStoreManager.librarySortOption
+-        .map { SortOption.valueOf(it) }
++        .map { runCatching { SortOption.valueOf(it) }.getOrDefault(SortOption.TITLE) }
+         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SortOption.TITLE)
+ 
+     val bookSortBy = dataStoreManager.bookSortOption
+-        .map { SortOption.valueOf(it) }
++        .map { runCatching { SortOption.valueOf(it) }.getOrDefault(SortOption.TITLE) }
+         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SortOption.TITLE)
+ 
+     val libraryViewMode = dataStoreManager.libraryViewMode
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/CompilerDialog.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/CompilerDialog.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/CompilerDialog.kt	2026-05-21 01:28:38.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/CompilerDialog.kt	2026-05-26 06:39:53.408458355 +0000
+@@ -77,9 +77,9 @@
+                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                 }
+ 
+-                if (uiState.error != null) {
++                uiState.error?.let { error ->
+                     Text(
+-                        text = uiState.error!!,
++                        text = error,
+                         color = MaterialTheme.colorScheme.error,
+                         modifier = Modifier.padding(16.dp)
+                     )
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/QuizPlayerScreen.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/QuizPlayerScreen.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/QuizPlayerScreen.kt	2026-05-25 08:06:52.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/quiz/QuizPlayerScreen.kt	2026-05-26 06:40:39.454655141 +0000
+@@ -126,13 +126,15 @@
+         .sourceDocumentsForCurrentQuiz()
+         .collectAsStateWithLifecycle(initialValue = emptyList())
+ 
+-    if (showQuestionAssets && currentQuestion != null) {
+-        QuestionAssetsReadOnlyDialog(
+-            question = currentQuestion!!,
+-            assets = currentQuestionAssets,
+-            sourceDocuments = currentBookSources,
+-            onDismiss = { showQuestionAssets = false }
+-        )
++    if (showQuestionAssets) {
++        currentQuestion?.let { question ->
++            QuestionAssetsReadOnlyDialog(
++                question = question,
++                assets = currentQuestionAssets,
++                sourceDocuments = currentBookSources,
++                onDismiss = { showQuestionAssets = false }
++            )
++        }
+     }
+ 
+     LaunchedEffect(state.isCompleted) {
+@@ -216,15 +218,19 @@
+                 if (totalQuestions == 0) {
+                     EmptyQuestionsPlaceholder()
+                 } else {
+-                    QuestionContent(
+-                        state = state,
+-                        currentQuestion = currentQuestion!!,
+-                        viewModel = viewModel,
+-                        onEditCategory = { selectedCategoryForEdit = it },
+-                        onImageClick = { fullscreenImageUrl = it },
+-                        assetCount = currentQuestionAssets.size,
+-                        onAssetsClick = { showQuestionAssets = true }
+-                    )
++                    currentQuestion?.let { question ->
++                        QuestionContent(
++                            state = state,
++                            currentQuestion = question,
++                            viewModel = viewModel,
++                            onEditCategory = { selectedCategoryForEdit = it },
++                            onImageClick = { fullscreenImageUrl = it },
++                            assetCount = currentQuestionAssets.size,
++                            onAssetsClick = { showQuestionAssets = true }
++                        )
++                    } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
++                        CircularProgressIndicator()
++                    }
+                 }
+             }
+         }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/review/ReviewDashboardScreen.kt mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/review/ReviewDashboardScreen.kt
+--- mks_original_compare/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/review/ReviewDashboardScreen.kt	2026-05-25 23:09:00.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/java/com/ahmedyejam/mks/ui/review/ReviewDashboardScreen.kt	2026-05-26 06:38:21.699727565 +0000
+@@ -56,6 +56,7 @@
+             item { com.ahmedyejam.mks.ui.components.SummaryCard("Flashcards due", state.summary.dueFlashcards.toString(), "Cards scheduled for review") }
+             item { com.ahmedyejam.mks.ui.components.SummaryCard("Blueprints due", state.summary.dueBlueprints.toString(), "Manual review queue") }
+             item { com.ahmedyejam.mks.ui.components.SummaryCard("Mistakes due", state.summary.dueMistakes.toString(), "Open mistake reviews") }
++            item { com.ahmedyejam.mks.ui.components.SummaryCard("Mistakes scheduled", state.summary.pendingMistakes.toString(), "Open mistakes not due yet") }
+             item { com.ahmedyejam.mks.ui.components.SummaryCard("Marked / weak", "${state.summary.markedQuestions} / ${state.summary.weakQuestions}", "Marked and weak questions") }
+             if (!state.isLoading && state.queue.isEmpty()) {
+                 item { EmptyStateCard("No due reviews", "There are no due review items right now.") }
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/res/xml/backup_rules.xml mks_repair_work/MKS-GPT4/app/src/main/res/xml/backup_rules.xml
+--- mks_original_compare/MKS-GPT4/app/src/main/res/xml/backup_rules.xml	2026-05-24 16:19:46.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/res/xml/backup_rules.xml	2026-05-26 06:38:46.194541886 +0000
+@@ -1,10 +1,10 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <full-backup-content>
+-    <!-- Keep core offline library data restorable. Exclude temporary/import/export caches. -->
+-    <include domain="database" path="mks_database"/>
+-    <include domain="database" path="mks_database-shm"/>
+-    <include domain="database" path="mks_database-wal"/>
+-    <include domain="file" path="datastore/"/>
++    <!-- Crash-hardening policy: do not auto-restore Room/DataStore across schema versions. Use explicit export/import instead. -->
++    <exclude domain="database" path="mks_database"/>
++    <exclude domain="database" path="mks_database-shm"/>
++    <exclude domain="database" path="mks_database-wal"/>
++    <exclude domain="file" path="datastore/"/>
+     <include domain="file" path="images/"/>
+ 
+     <exclude domain="cache" path="."/>
+diff -ruN mks_original_compare/MKS-GPT4/app/src/main/res/xml/data_extraction_rules.xml mks_repair_work/MKS-GPT4/app/src/main/res/xml/data_extraction_rules.xml
+--- mks_original_compare/MKS-GPT4/app/src/main/res/xml/data_extraction_rules.xml	2026-05-24 16:19:46.000000000 +0000
++++ mks_repair_work/MKS-GPT4/app/src/main/res/xml/data_extraction_rules.xml	2026-05-26 06:38:36.422906039 +0000
+@@ -1,10 +1,10 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <data-extraction-rules>
+     <cloud-backup>
+-        <include domain="database" path="mks_database"/>
+-        <include domain="database" path="mks_database-shm"/>
+-        <include domain="database" path="mks_database-wal"/>
+-        <include domain="file" path="datastore/"/>
++        <exclude domain="database" path="mks_database"/>
++        <exclude domain="database" path="mks_database-shm"/>
++        <exclude domain="database" path="mks_database-wal"/>
++        <exclude domain="file" path="datastore/"/>
+         <include domain="file" path="images/"/>
+         <exclude domain="cache" path="."/>
+         <exclude domain="file" path="exports/"/>
+@@ -12,10 +12,10 @@
+         <exclude domain="file" path="tmp/"/>
+     </cloud-backup>
+     <device-transfer>
+-        <include domain="database" path="mks_database"/>
+-        <include domain="database" path="mks_database-shm"/>
+-        <include domain="database" path="mks_database-wal"/>
+-        <include domain="file" path="datastore/"/>
++        <exclude domain="database" path="mks_database"/>
++        <exclude domain="database" path="mks_database-shm"/>
++        <exclude domain="database" path="mks_database-wal"/>
++        <exclude domain="file" path="datastore/"/>
+         <include domain="file" path="images/"/>
+         <exclude domain="cache" path="."/>
+         <exclude domain="file" path="exports/"/>
+diff -ruN mks_original_compare/MKS-GPT4/gradle/libs.versions.toml mks_repair_work/MKS-GPT4/gradle/libs.versions.toml
+--- mks_original_compare/MKS-GPT4/gradle/libs.versions.toml	2026-05-24 16:22:54.000000000 +0000
++++ mks_repair_work/MKS-GPT4/gradle/libs.versions.toml	2026-05-26 06:36:04.838101731 +0000
+@@ -11,7 +11,7 @@
+ kotlin = "2.2.10"
+ kotlinxSerialization = "1.8.0"
+ composeBom = "2024.09.00"
+-googleDevtoolsKsp = "2.3.5"
++googleDevtoolsKsp = "2.2.10-2.0.2"
+ navigationCompose = "2.8.9"
+ roomRuntime = "2.7.0"
+ roomKtx = "2.7.0"
+diff -ruN mks_original_compare/MKS-GPT4/gradle.properties mks_repair_work/MKS-GPT4/gradle.properties
+--- mks_original_compare/MKS-GPT4/gradle.properties	2026-05-24 07:36:48.000000000 +0000
++++ mks_repair_work/MKS-GPT4/gradle.properties	2026-05-26 06:39:29.775909223 +0000
+@@ -13,4 +13,6 @@
+ # org.gradle.parallel=true
+ # Kotlin code style for this project: "official" or "obsolete":
+ kotlin.code.style=official
+-kotlin.compiler.execution.strategy=in-process
+\ No newline at end of file
++kotlin.compiler.execution.strategy=in-process
++# Use KSP2 for Kotlin 2.2.x compatibility.
++ksp.useKSP2=true

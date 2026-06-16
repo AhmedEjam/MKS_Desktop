@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Crash-hardening policy: do not auto-restore Room/DataStore across schema versions. Use explicit export/import instead. -->
+    <exclude domain="database" path="mks_database"/>
+    <exclude domain="database" path="mks_database-shm"/>
+    <exclude domain="database" path="mks_database-wal"/>
+    <exclude domain="file" path="datastore/"/>
+    <exclude domain="file" path="exports/"/>
+    <exclude domain="file" path="import/"/>
+    <exclude domain="file" path="tmp/"/>
+</full-backup-content>

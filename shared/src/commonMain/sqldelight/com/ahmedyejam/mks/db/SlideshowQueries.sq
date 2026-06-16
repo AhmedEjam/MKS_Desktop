@@ -1,0 +1,48 @@
+-- Slideshow course and slide queries
+
+sl_courseSelectByBook:
+SELECT * FROM slideshow_courses WHERE bookId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+
+sl_courseSelectById:
+SELECT * FROM slideshow_courses WHERE id = ?;
+
+sl_courseInsert:
+INSERT INTO slideshow_courses (
+    externalId, bookId, title, description, iconName, coverImage, tags,
+    slideCount, studiedSlideCount, progress, isSystem, isPinned,
+    createdAt, updatedAt, lastStudiedAt, lastEditedAt,
+    isDerived, sourceQuizId
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+sl_courseUpdate:
+UPDATE slideshow_courses SET
+    title = ?, description = ?, iconName = ?, coverImage = ?, tags = ?,
+    slideCount = ?, studiedSlideCount = ?, progress = ?,
+    updatedAt = ?, lastEditedAt = ?
+WHERE id = ?;
+
+sl_courseSoftDelete:
+UPDATE slideshow_courses SET deletedAt = ? WHERE id = ?;
+
+sl_courseLastInsertId:
+SELECT last_insert_rowid();
+
+-- Course slides
+sl_slideSelectByCourse:
+SELECT * FROM course_slides WHERE courseId = ? AND deletedAt IS NULL ORDER BY orderIndex ASC;
+
+sl_slideSelectById:
+SELECT * FROM course_slides WHERE id = ?;
+
+sl_slideInsert:
+INSERT INTO course_slides (
+    externalId, courseId, title, body, speakerNotes, imagePath,
+    orderIndex, isCompleted, tags, difficulty, dueAt, reviewCount, lastReviewedAt,
+    createdAt, updatedAt, sourceQuestionId, syncConfig
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+sl_slideUpdateProgress:
+UPDATE course_slides SET isCompleted = ?, updatedAt = ? WHERE id = ?;
+
+sl_slideSoftDelete:
+UPDATE course_slides SET deletedAt = ? WHERE id = ?;

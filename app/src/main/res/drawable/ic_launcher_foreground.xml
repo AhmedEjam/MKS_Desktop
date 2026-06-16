@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center of icon is (54, 54). Safe zone is 66x66, so from 21 to 87 -->
+
+    <!-- Open Book Symbol (Abstract) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,45 C32,41 35,38 39,38 L54,38 L54,78 L39,78 C35,78 32,75 32,71 Z" />
+    <path
+        android:fillColor="#B2EBF2"
+        android:pathData="M76,45 C76,41 73,38 69,38 L54,38 L54,78 L69,78 C73,78 76,75 76,71 Z" />
+
+    <!-- Lightning Bolt (Vibrant Energy / Speed) -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M58,35 L48,50 L56,50 L46,65"
+        android:strokeColor="#000000"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Knowledge Symbol (Graduation Cap - Minimalist) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,20 L75,30 L54,40 L33,30 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,30 L68,38 C68,38 62,42 54,42 C46,42 40,38 40,38 L40,30" />
+
+    <!-- Tassel -->
+    <path
+        android:strokeColor="#FFD600"
+        android:strokeWidth="2"
+        android:pathData="M75,30 L75,45"
+        android:strokeLineCap="round"/>
+</vector>

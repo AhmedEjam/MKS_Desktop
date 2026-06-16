@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "fixture": "/mnt/data/work_stage4e/android/docs/migration/stage4e/MKS_STAGE4E_SCHEMA7_ROUNDTRIP_FIXTURE.zip",
+  "signature": "be1f4b67a776d5b98637edc5a40793119096fa8052a39b53a6221ee86529ad4c",
+  "counts": {
+    "annotations": 1,
+    "assetReferences": 1,
+    "books": 2,
+    "mediaFiles": 0,
+    "questionAssets": 1,
+    "questionCategories": 3,
+    "questions": 2,
+    "quizzes": 1,
+    "softDeletedRecords": 2,
+    "sourceDocuments": 1,
+    "workspaceSettings": 1,
+    "workspaces": 1
+  }
+}

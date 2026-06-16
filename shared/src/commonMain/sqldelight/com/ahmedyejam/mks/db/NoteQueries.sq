@@ -1,0 +1,52 @@
+-- Note collection and blueprint queries
+
+nt_collectionSelectByBook:
+SELECT * FROM note_collections WHERE bookId = ? AND deletedAt IS NULL;
+
+nt_collectionSelectById:
+SELECT * FROM note_collections WHERE id = ?;
+
+nt_collectionInsert:
+INSERT INTO note_collections (
+    externalId, bookId, title, description, iconName, coverImage, tags,
+    noteCount, isSystem, isPinned,
+    createdAt, updatedAt, lastStudiedAt, lastEditedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+nt_collectionSoftDelete:
+UPDATE note_collections SET deletedAt = ? WHERE id = ?;
+
+nt_collectionLastInsertId:
+SELECT last_insert_rowid();
+
+-- Note blueprints
+nt_blueprintSelectByCollection:
+SELECT * FROM note_blueprints WHERE collectionId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;
+
+nt_blueprintSelectById:
+SELECT * FROM note_blueprints WHERE id = ?;
+
+nt_blueprintSelectForReview:
+SELECT * FROM note_blueprints WHERE collectionId = ? AND reviewStatus = 'REVIEWING' AND deletedAt IS NULL;
+
+nt_blueprintInsert:
+INSERT INTO note_blueprints (
+    externalId, collectionId, title, description, summary, iconName, coverImage,
+    body, bulletPoints, tags, blueprintMode, linkedQuestionsJson, linkedAssetsJson,
+    reviewStatus, reviewCount, lastReviewedAt,
+    createdAt, updatedAt, sourceQuestionId
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+nt_blueprintUpdate:
+UPDATE note_blueprints SET
+    title = ?, description = ?, summary = ?, iconName = ?, coverImage = ?,
+    body = ?, bulletPoints = ?, tags = ?,
+    blueprintMode = ?, linkedQuestionsJson = ?, linkedAssetsJson = ?,
+    reviewStatus = ?, updatedAt = ?
+WHERE id = ?;
+
+nt_blueprintUpdateReviewCount:
+UPDATE note_blueprints SET reviewCount = ?, lastReviewedAt = ? WHERE id = ?;
+
+nt_blueprintSoftDelete:
+UPDATE note_blueprints SET deletedAt = ? WHERE id = ?;

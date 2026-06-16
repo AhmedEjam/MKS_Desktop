@@ -1,0 +1,20 @@
+{
+  "entries": [
+    "manifest.json",
+    "workspace.json",
+    "data/books.json",
+    "data/quizzes.json",
+    "data/questions.json",
+    "data/question_categories.json",
+    "data/asset_references.json",
+    "data/question_assets.json",
+    "data/source_documents.json",
+    "data/annotations.json",
+    "data/media_manifest.json",
+    "data/soft_deletes.json",
+    "media/question/question-stage4-final/q-media.txt"
+  ],
+  "fixture": "MKS_STAGE4_FINAL_SCHEMA7_MEDIA_FIXTURE.zip",
+  "mediaSha256": "39d5801f5b6f97ecf585700255b4a06fa56327fe62487c78fcb424e851ab9120",
+  "signatureSha256": "7720cb9ffb22763ade932cf9b573a10fc2eb00e3af00da5d539f33975189ef1d"
+}

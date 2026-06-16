@@ -1,0 +1,48 @@
+=== EXACT DUPLICATE FILES ===
+Duplicate content found in 2 files:
+  - ./app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+  - ./app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+=== FILES WITH EXACT SAME NAME (POTENTIAL DUPLICATES) ===
+File 'strings.xml' exists in multiple locations:
+  - ./core/ui/src/main/res/values/strings.xml
+  - ./core/ui/src/main/res/values-ar/strings.xml
+File 'LibraryContentGrid.kt' exists in multiple locations:
+  - ./core/ui/src/main/java/com/ahmedyejam/mks/ui/components/LibraryContentGrid.kt
+  - ./feature/ui/src/main/java/com/ahmedyejam/mks/ui/library/components/LibraryContentGrid.kt
+File 'AppModule.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/di/AppModule.kt
+  - ./archive/legacy-root-sources/di/AppModule.kt
+File 'MksRepository.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/repository/MksRepository.kt
+  - ./archive/legacy-root-sources/data/repository/MksRepository.kt
+File 'FileManager.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/local/FileManager.kt
+  - ./archive/legacy-root-sources/data/local/FileManager.kt
+File 'LibraryMapper.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/mapping/LibraryMapper.kt
+  - ./archive/legacy-root-sources/data/import/mapping/LibraryMapper.kt
+File 'BundleNormalizer.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/normalization/BundleNormalizer.kt
+  - ./archive/legacy-root-sources/data/import/normalization/BundleNormalizer.kt
+File 'XlsxImageResolver.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/xlsx/XlsxImageResolver.kt
+  - ./archive/legacy-root-sources/data/import/xlsx/XlsxImageResolver.kt
+File 'XlsxLibraryCompiler.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/xlsx/XlsxLibraryCompiler.kt
+  - ./archive/legacy-root-sources/data/import/xlsx/XlsxLibraryCompiler.kt
+File 'GenericImageExtractor.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/parser/GenericImageExtractor.kt
+  - ./archive/legacy-root-sources/data/import/parser/GenericImageExtractor.kt
+File 'SpreadsheetQuestionParser.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/parser/SpreadsheetQuestionParser.kt
+  - ./archive/legacy-root-sources/data/import/parser/SpreadsheetQuestionParser.kt
+File 'SpreadsheetHeaderMapper.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/parser/SpreadsheetHeaderMapper.kt
+  - ./archive/legacy-root-sources/data/import/parser/SpreadsheetHeaderMapper.kt
+File 'ImportFormatDetector.kt' exists in multiple locations:
+  - ./core/data/src/main/java/com/ahmedyejam/mks/data/import/detector/ImportFormatDetector.kt
+  - ./archive/legacy-root-sources/data/import/detector/ImportFormatDetector.kt
+File 'CompilerViewModel.kt' exists in multiple locations:
+  - ./archive/legacy-root-sources/ui/quiz/CompilerViewModel.kt
+  - ./feature/ui/src/main/java/com/ahmedyejam/mks/ui/quiz/CompilerViewModel.kt

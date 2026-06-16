@@ -1,0 +1,484 @@
+-- MKS Database v30 Schema
+-- SQLDelight schema definitions for code generation
+-- Mirrors 1.sqm (migration file)
+
+CREATE TABLE workspaces (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    isDefault INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE workspace_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL,
+    language TEXT,
+    theme TEXT,
+    defaultSort TEXT,
+    quizDefaultsJson TEXT,
+    importDefaultsJson TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL DEFAULT 0,
+    externalId TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    iconName TEXT,
+    coverImage TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    contentUpdatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    fields TEXT NOT NULL DEFAULT '[]',
+    questionCount INTEGER NOT NULL DEFAULT 0,
+    answeredCount INTEGER NOT NULL DEFAULT 0,
+    totalAttempts INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    accuracyPercentage REAL NOT NULL DEFAULT 0.0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE quizzes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    category TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    iconName TEXT,
+    coverImage TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    contentUpdatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    questionCount INTEGER NOT NULL DEFAULT 0,
+    answeredCount INTEGER NOT NULL DEFAULT 0,
+    totalAttempts INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    accuracyPercentage REAL NOT NULL DEFAULT 0.0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    quizId INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    type TEXT NOT NULL,
+    options TEXT NOT NULL,
+    correctAnswers TEXT NOT NULL,
+    explanation TEXT,
+    hint TEXT,
+    reference TEXT,
+    weight INTEGER NOT NULL DEFAULT 1,
+    imagePath TEXT,
+    imageName TEXT,
+    imageSource TEXT,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    isDropped INTEGER NOT NULL DEFAULT 0,
+    droppedAt INTEGER,
+    droppedReason TEXT,
+    isMarked INTEGER NOT NULL DEFAULT 0,
+    markedAt INTEGER,
+    markReason TEXT,
+    markReviewAt INTEGER,
+    notes TEXT,
+    categories TEXT NOT NULL DEFAULT '[]',
+    tags TEXT NOT NULL DEFAULT '[]',
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    additionalInfo TEXT,
+    sourceBookId TEXT,
+    sourceQuizId TEXT,
+    sourceQuestionId TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    timeSpentMs INTEGER NOT NULL DEFAULT 0,
+    lastAttemptResult INTEGER,
+    consecutiveCorrect INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    quizId INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    currentQuestionIndex INTEGER NOT NULL DEFAULT 0,
+    score INTEGER NOT NULL DEFAULT 0,
+    incorrectCount INTEGER NOT NULL DEFAULT 0,
+    answers TEXT NOT NULL DEFAULT '{}',
+    answersByIndex TEXT NOT NULL DEFAULT '{}',
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastModifiedAt INTEGER NOT NULL DEFAULT 0,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    questionIds TEXT NOT NULL DEFAULT '[]',
+    originalQuestionCount INTEGER NOT NULL DEFAULT 0,
+    shuffleQuestions INTEGER NOT NULL DEFAULT 1,
+    shuffleOptions INTEGER NOT NULL DEFAULT 1,
+    rapidMode INTEGER NOT NULL DEFAULT 0,
+    repeatWrong INTEGER NOT NULL DEFAULT 1,
+    quizTimerSeconds INTEGER NOT NULL DEFAULT 0,
+    questionTimerSeconds INTEGER NOT NULL DEFAULT 0,
+    rangeFrom INTEGER NOT NULL DEFAULT 0,
+    rangeTo INTEGER NOT NULL DEFAULT -1,
+    includeFilters TEXT NOT NULL DEFAULT '[]',
+    droppedOptions TEXT NOT NULL DEFAULT '{}',
+    droppedOptionsByIndex TEXT NOT NULL DEFAULT '{}',
+    visibleOptionsCount TEXT NOT NULL DEFAULT '{}',
+    visibleOptionsCountByIndex TEXT NOT NULL DEFAULT '{}',
+    currentStreak INTEGER NOT NULL DEFAULT 0,
+    maxStreak INTEGER NOT NULL DEFAULT 0,
+    resultTaxonomy TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER
+);
+
+CREATE TABLE category_metadata (
+    name TEXT NOT NULL PRIMARY KEY,
+    emoji TEXT,
+    color INTEGER,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE flashcard_decks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    cardCount INTEGER NOT NULL DEFAULT 0,
+    studiedCount INTEGER NOT NULL DEFAULT 0,
+    masteryPercentage REAL NOT NULL DEFAULT 0.0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE flashcards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    deckId INTEGER NOT NULL,
+    frontText TEXT NOT NULL,
+    backText TEXT NOT NULL,
+    hint TEXT,
+    imagePath TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    syncConfig TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER
+);
+
+CREATE TABLE learning_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    deckId INTEGER NOT NULL,
+    label TEXT,
+    stateJson TEXT NOT NULL,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE slideshow_courses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    slideCount INTEGER NOT NULL DEFAULT 0,
+    studiedSlideCount INTEGER NOT NULL DEFAULT 0,
+    progress REAL NOT NULL DEFAULT 0.0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    isDerived INTEGER NOT NULL DEFAULT 0,
+    sourceQuizId INTEGER,
+    deletedAt INTEGER
+);
+
+CREATE TABLE course_slides (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    courseId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    speakerNotes TEXT,
+    imagePath TEXT,
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    tags TEXT NOT NULL DEFAULT '[]',
+    difficulty TEXT,
+    dueAt INTEGER NOT NULL DEFAULT 0,
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    syncConfig TEXT NOT NULL DEFAULT '{}',
+    deletedAt INTEGER
+);
+
+CREATE TABLE note_collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    noteCount INTEGER NOT NULL DEFAULT 0,
+    isSystem INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    lastStudiedAt INTEGER NOT NULL DEFAULT 0,
+    lastEditedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE note_blueprints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    collectionId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    summary TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    body TEXT NOT NULL,
+    bulletPoints TEXT NOT NULL DEFAULT '[]',
+    tags TEXT NOT NULL DEFAULT '[]',
+    blueprintMode TEXT NOT NULL DEFAULT 'SIMPLE_NOTE',
+    linkedQuestionsJson TEXT NOT NULL DEFAULT '[]',
+    linkedAssetsJson TEXT NOT NULL DEFAULT '[]',
+    reviewStatus TEXT NOT NULL DEFAULT 'NEW',
+    reviewCount INTEGER NOT NULL DEFAULT 0,
+    lastReviewedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    sourceQuestionId INTEGER,
+    deletedAt INTEGER
+);
+
+CREATE TABLE prompts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    externalId TEXT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    stem TEXT NOT NULL,
+    conversationLinks TEXT NOT NULL DEFAULT '[]',
+    usageCount INTEGER NOT NULL DEFAULT 0,
+    lastUsedAt INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE prompt_decks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    iconName TEXT,
+    coverImage TEXT,
+    tags TEXT NOT NULL DEFAULT '[]',
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE prompt_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    deckId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    promptText TEXT NOT NULL,
+    variablesJson TEXT,
+    outputType TEXT NOT NULL,
+    tags TEXT NOT NULL DEFAULT '[]',
+    usageCount INTEGER NOT NULL DEFAULT 0,
+    lastUsedAt INTEGER,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE prompt_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    promptCardId INTEGER NOT NULL,
+    inputValuesJson TEXT NOT NULL,
+    renderedPrompt TEXT NOT NULL,
+    outputText TEXT,
+    linkedAssetType TEXT,
+    linkedAssetId INTEGER,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE knowledge_study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    targetType TEXT NOT NULL,
+    targetId INTEGER NOT NULL,
+    stateJson TEXT NOT NULL,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE question_categories (
+    questionId INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    deletedAt INTEGER,
+    PRIMARY KEY(questionId, category)
+);
+
+CREATE TABLE asset_references (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    path TEXT NOT NULL,
+    ownerType TEXT NOT NULL,
+    ownerId INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE question_assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    questionId INTEGER NOT NULL,
+    assetType TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    localPath TEXT,
+    externalUrl TEXT,
+    mimeType TEXT,
+    fileName TEXT,
+    fileSizeBytes INTEGER,
+    textContent TEXT,
+    sourceDocumentId INTEGER,
+    sourcePage TEXT,
+    sourceQuote TEXT,
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    isPinned INTEGER NOT NULL DEFAULT 0,
+    isPrimary INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE source_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER,
+    title TEXT NOT NULL,
+    sourceType TEXT NOT NULL,
+    author TEXT,
+    edition TEXT,
+    year TEXT,
+    publisher TEXT,
+    localPath TEXT,
+    externalUrl TEXT,
+    description TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE mistake_log_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    bookId INTEGER NOT NULL,
+    quizId INTEGER NOT NULL,
+    questionId INTEGER NOT NULL,
+    sessionId INTEGER,
+    selectedAnswer TEXT,
+    correctAnswer TEXT,
+    userReason TEXT,
+    correctConcept TEXT,
+    preventionNote TEXT,
+    linkedFlashcardId INTEGER,
+    linkedBlueprintId INTEGER,
+    linkedAssetId INTEGER,
+    isFixed INTEGER NOT NULL DEFAULT 0,
+    reviewAt INTEGER,
+    createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    deletedAt INTEGER
+);
+
+CREATE TABLE annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    workspaceId INTEGER NOT NULL,
+    bookId INTEGER NOT NULL,
+    ownerType TEXT NOT NULL,
+    ownerId INTEGER NOT NULL,
+    selectedText TEXT,
+    noteBody TEXT,
+    colorLabel TEXT NOT NULL DEFAULT 'YELLOW',
+    positionDataJson TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);
+
+CREATE TABLE study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    targetType TEXT NOT NULL,
+    targetId INTEGER NOT NULL,
+    label TEXT,
+    stateJson TEXT NOT NULL,
+    timeSpentMs INTEGER NOT NULL DEFAULT 0,
+    completionPercentage REAL NOT NULL DEFAULT 0.0,
+    isCompleted INTEGER NOT NULL DEFAULT 0,
+    correctCount INTEGER NOT NULL DEFAULT 0,
+    incorrectCount INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    deletedAt INTEGER
+);

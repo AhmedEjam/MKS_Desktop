@@ -1,0 +1,39 @@
+-- Workspace queries (unique names with "ws_" prefix to avoid conflicts)
+
+ws_selectAll:
+SELECT * FROM workspaces WHERE deletedAt IS NULL ORDER BY isDefault DESC, createdAt ASC;
+
+ws_selectById:
+SELECT * FROM workspaces WHERE id = ?;
+
+ws_selectByExternalId:
+SELECT * FROM workspaces WHERE externalId = ?;
+
+ws_selectDefault:
+SELECT * FROM workspaces WHERE isDefault = 1 AND deletedAt IS NULL LIMIT 1;
+
+ws_insert:
+INSERT INTO workspaces (externalId, name, description, isDefault, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+ws_update:
+UPDATE workspaces SET name = ?, description = ?, updatedAt = ? WHERE id = ?;
+
+ws_updateExternalId:
+UPDATE workspaces SET externalId = ?, updatedAt = ? WHERE id = ?;
+
+ws_softDelete:
+UPDATE workspaces SET deletedAt = ? WHERE id = ?;
+
+ws_lastInsertId:
+SELECT last_insert_rowid();
+
+ws_settingsByWorkspaceId:
+SELECT * FROM workspace_settings WHERE workspaceId = ? AND deletedAt IS NULL;
+
+ws_insertSettings:
+INSERT INTO workspace_settings (workspaceId, language, theme, defaultSort, quizDefaultsJson, importDefaultsJson, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+ws_updateSettings:
+UPDATE workspace_settings SET language = ?, theme = ?, defaultSort = ?, quizDefaultsJson = ?, importDefaultsJson = ?, updatedAt = ? WHERE workspaceId = ?;

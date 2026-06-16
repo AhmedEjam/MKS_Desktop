@@ -1,0 +1,45 @@
+-- Session queries
+
+se_selectAll:
+SELECT * FROM sessions WHERE deletedAt IS NULL ORDER BY createdAt DESC;
+
+se_selectById:
+SELECT * FROM sessions WHERE id = ?;
+
+se_selectByQuiz:
+SELECT * FROM sessions WHERE quizId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;
+
+se_selectIncomplete:
+SELECT * FROM sessions WHERE quizId = ? AND isCompleted = 0 AND deletedAt IS NULL;
+
+se_insert:
+INSERT INTO sessions (
+    quizId, label, currentQuestionIndex, score, incorrectCount,
+    answers, answersByIndex, isCompleted,
+    createdAt, updatedAt, lastModifiedAt, lastStudiedAt, lastEditedAt,
+    questionIds, originalQuestionCount,
+    shuffleQuestions, shuffleOptions, rapidMode, repeatWrong,
+    quizTimerSeconds, questionTimerSeconds, rangeFrom, rangeTo,
+    includeFilters, droppedOptions, droppedOptionsByIndex,
+    visibleOptionsCount, visibleOptionsCountByIndex,
+    currentStreak, maxStreak, resultTaxonomy
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+se_update:
+UPDATE sessions SET
+    currentQuestionIndex = ?, score = ?, incorrectCount = ?,
+    answers = ?, answersByIndex = ?, isCompleted = ?,
+    updatedAt = ?, lastModifiedAt = ?, lastEditedAt = ?,
+    droppedOptions = ?, droppedOptionsByIndex = ?,
+    visibleOptionsCount = ?, visibleOptionsCountByIndex = ?,
+    currentStreak = ?, maxStreak = ?
+WHERE id = ?;
+
+se_touchStudied:
+UPDATE sessions SET lastStudiedAt = ? WHERE id = ?;
+
+se_softDelete:
+UPDATE sessions SET deletedAt = ? WHERE id = ?;
+
+se_lastInsertId:
+SELECT last_insert_rowid();

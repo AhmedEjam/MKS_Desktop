@@ -1,0 +1,54 @@
+-- Flashcard deck and card queries
+
+fc_deckSelectByBook:
+SELECT * FROM flashcard_decks WHERE bookId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+
+fc_deckSelectById:
+SELECT * FROM flashcard_decks WHERE id = ?;
+
+fc_deckInsert:
+INSERT INTO flashcard_decks (
+    externalId, bookId, title, description, iconName, coverImage, tags,
+    cardCount, studiedCount, masteryPercentage, isSystem, isPinned,
+    createdAt, updatedAt, lastStudiedAt, lastEditedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+fc_deckUpdate:
+UPDATE flashcard_decks SET
+    title = ?, description = ?, iconName = ?, coverImage = ?, tags = ?,
+    cardCount = ?, studiedCount = ?, masteryPercentage = ?,
+    updatedAt = ?, lastEditedAt = ?
+WHERE id = ?;
+
+fc_deckSoftDelete:
+UPDATE flashcard_decks SET deletedAt = ? WHERE id = ?;
+
+fc_deckLastInsertId:
+SELECT last_insert_rowid();
+
+-- Flashcards
+fc_cardSelectByDeck:
+SELECT * FROM flashcards WHERE deckId = ? AND deletedAt IS NULL ORDER BY orderIndex ASC;
+
+fc_cardSelectById:
+SELECT * FROM flashcards WHERE id = ?;
+
+fc_cardSelectDue:
+SELECT * FROM flashcards WHERE deckId = ? AND dueAt <= ? AND deletedAt IS NULL ORDER BY dueAt ASC;
+
+fc_cardInsert:
+INSERT INTO flashcards (
+    externalId, deckId, frontText, backText, hint, imagePath, tags,
+    orderIndex, attempts, correctCount, difficulty,
+    dueAt, reviewCount, lastReviewedAt,
+    createdAt, updatedAt, sourceQuestionId, syncConfig
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+fc_cardUpdateProgress:
+UPDATE flashcards SET
+    attempts = ?, correctCount = ?, difficulty = ?,
+    dueAt = ?, reviewCount = ?, lastReviewedAt = ?
+WHERE id = ?;
+
+fc_cardSoftDelete:
+UPDATE flashcards SET deletedAt = ? WHERE id = ?;

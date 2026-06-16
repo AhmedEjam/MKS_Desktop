@@ -1,0 +1,41 @@
+-- Quiz queries
+
+qz_selectAll:
+SELECT * FROM quizzes WHERE deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+
+qz_selectById:
+SELECT * FROM quizzes WHERE id = ?;
+
+qz_selectByBook:
+SELECT * FROM quizzes WHERE bookId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+
+qz_selectByExternalId:
+SELECT * FROM quizzes WHERE externalId = ?;
+
+qz_insert:
+INSERT INTO quizzes (
+    externalId, bookId, title, description, category, tags, iconName, coverImage,
+    createdAt, updatedAt, contentUpdatedAt, lastStudiedAt, lastEditedAt,
+    isPinned, isSystem
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+qz_update:
+UPDATE quizzes SET
+    title = ?, description = ?, category = ?, tags = ?, iconName = ?, coverImage = ?,
+    updatedAt = ?, contentUpdatedAt = ?, lastEditedAt = ?, isPinned = ?
+WHERE id = ?;
+
+qz_updateStats:
+UPDATE quizzes SET
+    questionCount = ?, answeredCount = ?, totalAttempts = ?,
+    completionPercentage = ?, accuracyPercentage = ?
+WHERE id = ?;
+
+qz_softDelete:
+UPDATE quizzes SET deletedAt = ? WHERE id = ?;
+
+qz_countByBook:
+SELECT COUNT(*) FROM quizzes WHERE bookId = ? AND deletedAt IS NULL;
+
+qz_lastInsertId:
+SELECT last_insert_rowid();

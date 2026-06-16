@@ -1,0 +1,66 @@
+-- Question queries
+
+qu_selectAll:
+SELECT * FROM questions WHERE deletedAt IS NULL ORDER BY createdAt DESC;
+
+qu_selectById:
+SELECT * FROM questions WHERE id = ?;
+
+qu_selectByQuiz:
+SELECT * FROM questions WHERE quizId = ? AND deletedAt IS NULL ORDER BY id ASC;
+
+qu_selectByExternalId:
+SELECT * FROM questions WHERE externalId = ?;
+
+qu_selectByExternalIdInQuiz:
+SELECT * FROM questions WHERE quizId = ? AND externalId = ? AND deletedAt IS NULL;
+
+qu_selectMarked:
+SELECT * FROM questions WHERE isMarked = 1 AND deletedAt IS NULL ORDER BY markReviewAt ASC;
+
+qu_countByQuiz:
+SELECT COUNT(*) FROM questions WHERE quizId = ? AND deletedAt IS NULL;
+
+qu_insert:
+INSERT INTO questions (
+    externalId, quizId, text, type, options, correctAnswers,
+    explanation, hint, reference, weight, imagePath, imageName, imageSource,
+    attempts, correctCount, isDropped, droppedAt, droppedReason,
+    isMarked, markedAt, markReason, markReviewAt,
+    notes, categories, tags, difficulty, dueAt, reviewCount, lastReviewedAt,
+    additionalInfo, sourceBookId, sourceQuizId, sourceQuestionId,
+    createdAt, updatedAt, lastStudiedAt, lastEditedAt,
+    timeSpentMs, lastAttemptResult, consecutiveCorrect
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+qu_update:
+UPDATE questions SET
+    text = ?, type = ?, options = ?, correctAnswers = ?,
+    explanation = ?, hint = ?, reference = ?, weight = ?,
+    imagePath = ?, imageName = ?, imageSource = ?,
+    notes = ?, categories = ?, tags = ?,
+    updatedAt = ?, lastEditedAt = ?
+WHERE id = ?;
+
+qu_updateAttempt:
+UPDATE questions SET
+    attempts = ?, correctCount = ?, lastStudiedAt = ?,
+    timeSpentMs = ?, lastAttemptResult = ?, consecutiveCorrect = ?
+WHERE id = ?;
+
+qu_updateMarkedStatus:
+UPDATE questions SET isMarked = ?, markedAt = ?, markReason = ?, markReviewAt = ? WHERE id = ?;
+
+qu_updateDroppedStatus:
+UPDATE questions SET isDropped = ?, droppedAt = ?, droppedReason = ? WHERE id = ?;
+
+qu_updateSpacedRepetition:
+UPDATE questions SET
+    difficulty = ?, dueAt = ?, reviewCount = ?, lastReviewedAt = ?
+WHERE id = ?;
+
+qu_softDelete:
+UPDATE questions SET deletedAt = ? WHERE id = ?;
+
+qu_lastInsertId:
+SELECT last_insert_rowid();

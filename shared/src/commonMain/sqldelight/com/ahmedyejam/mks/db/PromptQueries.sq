@@ -1,0 +1,43 @@
+-- Prompt deck, card, and run queries
+
+pr_deckSelectByBook:
+SELECT * FROM prompt_decks WHERE bookId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;
+
+pr_deckSelectById:
+SELECT * FROM prompt_decks WHERE id = ?;
+
+pr_deckInsert:
+INSERT INTO prompt_decks (bookId, title, description, iconName, coverImage, tags, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+pr_deckSoftDelete:
+UPDATE prompt_decks SET deletedAt = ? WHERE id = ?;
+
+pr_deckLastInsertId:
+SELECT last_insert_rowid();
+
+-- Prompt cards
+pr_cardSelectByDeck:
+SELECT * FROM prompt_cards WHERE deckId = ? AND deletedAt IS NULL ORDER BY sortOrder ASC;
+
+pr_cardSelectById:
+SELECT * FROM prompt_cards WHERE id = ?;
+
+pr_cardInsert:
+INSERT INTO prompt_cards (
+    deckId, title, promptText, variablesJson, outputType, tags,
+    usageCount, lastUsedAt, sortOrder, createdAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+pr_cardSoftDelete:
+UPDATE prompt_cards SET deletedAt = ? WHERE id = ?;
+
+-- Prompt runs
+pr_runInsert:
+INSERT INTO prompt_runs (
+    promptCardId, inputValuesJson, renderedPrompt, outputText,
+    linkedAssetType, linkedAssetId, createdAt
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+pr_runSelectByCard:
+SELECT * FROM prompt_runs WHERE promptCardId = ? AND deletedAt IS NULL ORDER BY createdAt DESC;

@@ -1,0 +1,75 @@
+-- Asset queries (references, question assets, source documents, annotations)
+
+as_selectRefsByOwner:
+SELECT * FROM asset_references WHERE ownerType = ? AND ownerId = ? AND deletedAt IS NULL;
+
+as_insertRef:
+INSERT INTO asset_references (path, ownerType, ownerId, createdAt) VALUES (?, ?, ?, ?);
+
+as_softDeleteRef:
+UPDATE asset_references SET deletedAt = ? WHERE id = ?;
+
+as_lastInsertId:
+SELECT last_insert_rowid();
+
+as_deleteRefsByOwner:
+DELETE FROM asset_references WHERE ownerType = ? AND ownerId = ?;
+
+as_countRefsForPath:
+SELECT COUNT(*) FROM asset_references WHERE path = ? AND deletedAt IS NULL;
+
+as_selectRefsByPath:
+SELECT * FROM asset_references WHERE path = ? AND deletedAt IS NULL;
+
+as_deleteByPath:
+DELETE FROM asset_references WHERE path = ?;
+
+-- QuestionAssets
+qas_selectByQuestion:
+SELECT * FROM question_assets WHERE questionId = ? AND deletedAt IS NULL ORDER BY sortOrder ASC;
+
+qas_selectById:
+SELECT * FROM question_assets WHERE id = ?;
+
+qas_insert:
+INSERT INTO question_assets (
+    bookId, quizId, questionId, assetType, title, description,
+    localPath, externalUrl, mimeType, fileName, fileSizeBytes,
+    textContent, sourceDocumentId, sourcePage, sourceQuote,
+    sortOrder, isPinned, isPrimary, createdAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+qas_softDelete:
+UPDATE question_assets SET deletedAt = ? WHERE id = ?;
+
+-- SourceDocuments
+sd_selectByBook:
+SELECT * FROM source_documents WHERE bookId = ? AND deletedAt IS NULL;
+
+sd_selectById:
+SELECT * FROM source_documents WHERE id = ?;
+
+sd_insert:
+INSERT INTO source_documents (
+    bookId, title, sourceType, author, edition, year, publisher,
+    localPath, externalUrl, description, createdAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+sd_softDelete:
+UPDATE source_documents SET deletedAt = ? WHERE id = ?;
+
+-- Annotations
+ann_selectByOwner:
+SELECT * FROM annotations WHERE ownerType = ? AND ownerId = ? AND deletedAt IS NULL;
+
+ann_selectById:
+SELECT * FROM annotations WHERE id = ?;
+
+ann_insert:
+INSERT INTO annotations (
+    workspaceId, bookId, ownerType, ownerId, selectedText, noteBody,
+    colorLabel, positionDataJson, createdAt, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+ann_softDelete:
+UPDATE annotations SET deletedAt = ? WHERE id = ?;

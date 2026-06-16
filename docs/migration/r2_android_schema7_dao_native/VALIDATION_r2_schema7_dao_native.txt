@@ -1,0 +1,28 @@
+R2 schema-7 DAO-native validation
+Input base: MKS_ANDROID.V26_R1_SCHEMA7_REPO_REPAIR.zip
+
+435:            archiveKind = "r2-schema7-dao-native-coverage",
+app/src/main/java/com/ahmedyejam/mks/data/exchange/v7/MksExchangeV7Models.kt:289:data class MksExchangeV7SupplementalData(
+app/src/main/java/com/ahmedyejam/mks/data/exchange/v7/MksExchangeV7Archive.kt:145:        supplemental: MksExchangeV7SupplementalData = MksExchangeV7SupplementalData()
+app/src/main/java/com/ahmedyejam/mks/data/exchange/v7/MksExchangeV7Archive.kt:173:        supplemental: MksExchangeV7SupplementalData = MksExchangeV7SupplementalData()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:305:    private suspend fun collectSchema7SupplementalForQuiz(quizId: Long): MksExchangeV7SupplementalData {
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:306:        val quiz = quizDao.getQuizById(quizId) ?: return MksExchangeV7SupplementalData()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:310:    private suspend fun collectSchema7SupplementalForBook(bookId: Long, quizScopeIds: Set<Long>? = null): MksExchangeV7SupplementalData {
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:311:        val book = bookDao.getBookById(bookId) ?: return MksExchangeV7SupplementalData()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:347:    private suspend fun collectSchema7SupplementalForAll(): MksExchangeV7SupplementalData {
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:366:    ): MksExchangeV7SupplementalData {
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:378:        return MksExchangeV7SupplementalData(
+app/src/main/java/com/ahmedyejam/mks/data/local/dao/AssetReferenceDao.kt:34:    suspend fun getAllReferencesIncludingDeleted(): List<AssetReferenceEntity>
+app/src/main/java/com/ahmedyejam/mks/data/local/dao/QuestionAssetDao.kt:36:    suspend fun getAllAssetsIncludingDeleted(): List<QuestionAssetEntity>
+app/src/main/java/com/ahmedyejam/mks/data/local/dao/SourceDocumentDao.kt:24:    suspend fun getAllSourcesIncludingDeleted(): List<SourceDocumentEntity>
+app/src/main/java/com/ahmedyejam/mks/data/local/dao/AnnotationDao.kt:36:    suspend fun getAllAnnotationsIncludingDeleted(): List<AnnotationEntity>
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:325:        val references = database.assetReferenceDao().getAllReferencesIncludingDeleted()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:351:        val sources = database.sourceDocumentDao().getAllSourcesIncludingDeleted()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:352:        val assets = database.questionAssetDao().getAllAssetsIncludingDeleted()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:353:        val annotations = database.annotationDao().getAllAnnotationsIncludingDeleted()
+app/src/main/java/com/ahmedyejam/mks/data/repository/ExportManager.kt:354:        val references = database.assetReferenceDao().getAllReferencesIncludingDeleted()
+445:                assetReferences = assetReferences.size,
+446:                questionAssets = questionAssets.size,
+447:                sourceDocuments = sourceDocuments.size,
+448:                annotations = annotations.size,
+450:                softDeletedRecords = softDeletes.size

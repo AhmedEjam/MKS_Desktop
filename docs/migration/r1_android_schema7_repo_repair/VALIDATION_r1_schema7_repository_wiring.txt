@@ -1,0 +1,4 @@
+PASS: R1 schema-7 repository wiring markers present
+PASS: Android Stage 4 final schema-7 media exchange patch markers present
+Stage 4D schema-7 UI wiring validation PASS
+PASS: Stage 4 final fixture has schema-7 manifest, media_manifest, media payload, and matching sha256
