@@ -46,3 +46,21 @@ UPDATE category_metadata SET name = ? WHERE name = ?;
 
 cm_softDelete:
 UPDATE category_metadata SET deletedAt = ? WHERE name = ?;
+
+mk_countDue:
+SELECT COUNT(*) FROM mistake_log_entries WHERE reviewAt <= ? AND isFixed = 0 AND deletedAt IS NULL;
+
+mk_countPending:
+SELECT COUNT(*) FROM mistake_log_entries WHERE isFixed = 0 AND deletedAt IS NULL;
+
+mk_selectDue:
+SELECT * FROM mistake_log_entries WHERE reviewAt <= ? AND isFixed = 0 AND deletedAt IS NULL ORDER BY reviewAt ASC LIMIT ?;
+
+mk_snooze:
+UPDATE mistake_log_entries SET reviewAt = ?, updatedAt = ? WHERE id = ?;
+
+mk_countFixed:
+SELECT COUNT(*) FROM mistake_log_entries WHERE isFixed = 1 AND deletedAt IS NULL;
+
+mk_countOpen:
+SELECT COUNT(*) FROM mistake_log_entries WHERE isFixed = 0 AND deletedAt IS NULL;

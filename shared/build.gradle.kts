@@ -54,6 +54,12 @@ kotlin {
 
                 // Coil (Multiplatform)
                 implementation(libs.coil.mp)
+
+                // Ktor
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.client.logging)
             }
         }
 
@@ -74,6 +80,12 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtime.compose)
+
+                // Ktor Android
+                implementation(libs.ktor.client.okhttp)
+
+                // ML Kit OCR
+                implementation("com.google.mlkit:text-recognition:16.0.1")
             }
         }
 
@@ -91,6 +103,9 @@ kotlin {
 
                 // Koin (core only - no Android-specific)
                 implementation(libs.koin.core)
+
+                // Ktor Desktop
+                implementation(libs.ktor.client.java)
             }
         }
     }

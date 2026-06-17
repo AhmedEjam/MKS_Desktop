@@ -12,10 +12,12 @@ import com.ahmedyejam.mks.platform.DesktopFileDialog
 import com.ahmedyejam.mks.platform.DesktopFileManager
 import com.ahmedyejam.mks.platform.DesktopImageLoader
 import com.ahmedyejam.mks.platform.DesktopTtsManager
+import com.ahmedyejam.mks.platform.DesktopOcrManager
 import com.ahmedyejam.mks.platform.FileDialog
 import com.ahmedyejam.mks.platform.FileManager
 import com.ahmedyejam.mks.platform.ImageLoader
 import com.ahmedyejam.mks.platform.TtsManager
+import com.ahmedyejam.mks.platform.OcrManager
 import org.koin.dsl.module
 
 val desktopPlatformModule = module {
@@ -24,6 +26,7 @@ val desktopPlatformModule = module {
     single<TtsManager> { DesktopTtsManager() }
     single<ImageLoader> { DesktopImageLoader() }
     single<FocusManager> { DesktopFocusManager() }
+    single<OcrManager> { DesktopOcrManager() }
     single<FileDialog> { DesktopFileDialog() }
     single<BundleFileParser> { DesktopBundleFileParser() }
     single<SpreadsheetDataProviderFactory> { DesktopSpreadsheetDataProviderFactory() }

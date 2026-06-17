@@ -10,8 +10,26 @@ pr_deckInsert:
 INSERT INTO prompt_decks (bookId, title, description, iconName, coverImage, tags, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
+pr_deckUpdate:
+UPDATE prompt_decks SET
+    title = ?, description = ?, iconName = ?, coverImage = ?, tags = ?,
+    updatedAt = ?
+WHERE id = ?;
+
+pr_deckUpdateBook:
+UPDATE prompt_decks SET bookId = ?, updatedAt = ? WHERE id = ?;
+
 pr_deckSoftDelete:
 UPDATE prompt_decks SET deletedAt = ? WHERE id = ?;
+
+pr_deckRestore:
+UPDATE prompt_decks SET deletedAt = NULL WHERE id = ?;
+
+pr_deckPermanentDelete:
+DELETE FROM prompt_decks WHERE id = ?;
+
+pr_selectDeleted:
+SELECT * FROM prompt_decks WHERE bookId IN (SELECT id FROM books WHERE workspaceId = ?) AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
 
 pr_deckLastInsertId:
 SELECT last_insert_rowid();

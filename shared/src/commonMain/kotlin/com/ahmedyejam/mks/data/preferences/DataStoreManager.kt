@@ -67,6 +67,10 @@ class DataStoreManager(private val dataStore: DataStore<Preferences>) {
     val doubleTapToSubmit: Flow<Boolean> = dataStore.data.map { it[DOUBLE_TAP_TO_SUBMIT] ?: true }
     val focusModeEnabled: Flow<Boolean> = dataStore.data.map { it[FOCUS_MODE_ENABLED] ?: false }
 
+    val ollamaBaseUrl: Flow<String> = dataStore.data.map { it[OLLAMA_BASE_URL] ?: "http://localhost:11434" }
+    val ollamaModelName: Flow<String> = dataStore.data.map { it[OLLAMA_MODEL_NAME] ?: "llama3" }
+    val ollamaApiKey: Flow<String> = dataStore.data.map { it[OLLAMA_API_KEY] ?: "" }
+
     suspend fun setAutoAdvanceDelay(delayMs: Int) { dataStore.edit { it[AUTO_ADVANCE_DELAY] = SettingsSanitizer.autoAdvanceDelay(delayMs) } }
     suspend fun setShowCategorization(enabled: Boolean) { dataStore.edit { it[SHOW_CATEGORIZATION] = enabled } }
     suspend fun setOneByOneMode(enabled: Boolean) { dataStore.edit { it[ONE_BY_ONE_MODE] = enabled } }

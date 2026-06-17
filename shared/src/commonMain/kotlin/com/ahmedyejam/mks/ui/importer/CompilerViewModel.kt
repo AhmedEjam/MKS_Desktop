@@ -339,6 +339,10 @@ class CompilerViewModel(
         processSpreadsheetRows(rows, headerRow, index)
     }
 
+    fun updateOptionColumns(optionCols: List<Int>) {
+        updateMapping(_uiState.value.mapping, optionCols)
+    }
+
     fun toggleQuestionInclusion(index: Int) {
         _uiState.update { state ->
             val currentQuestions = state.questions.toMutableList()

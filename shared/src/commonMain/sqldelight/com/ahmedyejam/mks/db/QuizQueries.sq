@@ -1,13 +1,13 @@
 -- Quiz queries
 
 qz_selectAll:
-SELECT * FROM quizzes WHERE deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+SELECT * FROM quizzes WHERE deletedAt IS NULL ORDER BY isPinned DESC, title ASC;
+
+qz_selectByBook:
+SELECT * FROM quizzes WHERE bookId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, title ASC;
 
 qz_selectById:
 SELECT * FROM quizzes WHERE id = ?;
-
-qz_selectByBook:
-SELECT * FROM quizzes WHERE bookId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
 
 qz_selectByExternalId:
 SELECT * FROM quizzes WHERE externalId = ?;
@@ -22,7 +22,8 @@ INSERT INTO quizzes (
 qz_update:
 UPDATE quizzes SET
     title = ?, description = ?, category = ?, tags = ?, iconName = ?, coverImage = ?,
-    updatedAt = ?, contentUpdatedAt = ?, lastEditedAt = ?, isPinned = ?
+    updatedAt = ?, contentUpdatedAt = ?, lastEditedAt = ?,
+    isPinned = ?
 WHERE id = ?;
 
 qz_updateStats:
@@ -31,11 +32,20 @@ UPDATE quizzes SET
     completionPercentage = ?, accuracyPercentage = ?
 WHERE id = ?;
 
+qz_updateBook:
+UPDATE quizzes SET bookId = ?, updatedAt = ? WHERE id = ?;
+
 qz_softDelete:
 UPDATE quizzes SET deletedAt = ? WHERE id = ?;
 
-qz_countByBook:
-SELECT COUNT(*) FROM quizzes WHERE bookId = ? AND deletedAt IS NULL;
+qz_restore:
+UPDATE quizzes SET deletedAt = NULL WHERE id = ?;
 
-qz_lastInsertId:
-SELECT last_insert_rowid();
+qz_permanentDelete:
+DELETE FROM quizzes WHERE id = ?;
+
+qz_selectDeleted:
+SELECT * FROM quizzes WHERE bookId IN (SELECT id FROM books WHERE workspaceId = ?) AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
+
+qz_countAll:
+SELECT COUNT(*) FROM quizzes WHERE deletedAt IS NULL;

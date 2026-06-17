@@ -21,8 +21,20 @@ UPDATE slideshow_courses SET
     updatedAt = ?, lastEditedAt = ?
 WHERE id = ?;
 
+sl_courseUpdateBook:
+UPDATE slideshow_courses SET bookId = ?, updatedAt = ? WHERE id = ?;
+
 sl_courseSoftDelete:
 UPDATE slideshow_courses SET deletedAt = ? WHERE id = ?;
+
+sl_courseRestore:
+UPDATE slideshow_courses SET deletedAt = NULL WHERE id = ?;
+
+sl_coursePermanentDelete:
+DELETE FROM slideshow_courses WHERE id = ?;
+
+sl_selectDeleted:
+SELECT * FROM slideshow_courses WHERE bookId IN (SELECT id FROM books WHERE workspaceId = ?) AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
 
 sl_courseLastInsertId:
 SELECT last_insert_rowid();

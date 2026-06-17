@@ -12,10 +12,12 @@ import com.ahmedyejam.mks.platform.AndroidFileDialog
 import com.ahmedyejam.mks.platform.AndroidFileManager
 import com.ahmedyejam.mks.platform.AndroidImageLoader
 import com.ahmedyejam.mks.platform.AndroidTtsManager
+import com.ahmedyejam.mks.platform.AndroidOcrManager
 import com.ahmedyejam.mks.platform.FileDialog
 import com.ahmedyejam.mks.platform.FileManager
 import com.ahmedyejam.mks.platform.ImageLoader
 import com.ahmedyejam.mks.platform.TtsManager
+import com.ahmedyejam.mks.platform.OcrManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -25,6 +27,7 @@ val androidPlatformModule = module {
     single<TtsManager> { AndroidTtsManager(androidContext()) }
     single<ImageLoader> { AndroidImageLoader(androidContext()) }
     single<FocusManager> { AndroidFocusManager(androidContext()) }
+    single<OcrManager> { AndroidOcrManager() }
     factory<FileDialog> { params -> AndroidFileDialog(activity = params.get()) }
     single<BundleFileParser> { AndroidBundleFileParser() }
     single<SpreadsheetDataProviderFactory> { AndroidSpreadsheetDataProviderFactory() }

@@ -1,19 +1,19 @@
--- Book queries (unique names)
+-- Book queries
 
 bk_selectAll:
-SELECT * FROM books WHERE deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
+SELECT * FROM books WHERE deletedAt IS NULL ORDER BY isPinned DESC, title ASC;
+
+bk_selectByWorkspace:
+SELECT * FROM books WHERE workspaceId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, title ASC;
 
 bk_selectById:
 SELECT * FROM books WHERE id = ?;
 
-bk_selectByWorkspace:
-SELECT * FROM books WHERE workspaceId = ? AND deletedAt IS NULL ORDER BY isPinned DESC, lastStudiedAt DESC;
-
 bk_selectByExternalId:
 SELECT * FROM books WHERE externalId = ?;
 
-bk_searchByTitle:
-SELECT * FROM books WHERE title LIKE '%' || ? || '%' AND deletedAt IS NULL;
+bk_selectByExternalIdInWorkspace:
+SELECT * FROM books WHERE externalId = ? AND workspaceId = ?;
 
 bk_insert:
 INSERT INTO books (
@@ -35,17 +35,20 @@ UPDATE books SET
     completionPercentage = ?, accuracyPercentage = ?
 WHERE id = ?;
 
-bk_touchStudied:
-UPDATE books SET lastStudiedAt = ? WHERE id = ?;
+bk_updateWorkspace:
+UPDATE books SET workspaceId = ?, updatedAt = ? WHERE id = ?;
 
 bk_softDelete:
 UPDATE books SET deletedAt = ? WHERE id = ?;
 
-bk_countByWorkspace:
-SELECT COUNT(*) FROM books WHERE workspaceId = ? AND deletedAt IS NULL;
+bk_restore:
+UPDATE books SET deletedAt = NULL WHERE id = ?;
 
-bk_lastInsertId:
-SELECT last_insert_rowid();
+bk_permanentDelete:
+DELETE FROM books WHERE id = ?;
 
-bk_selectByExternalIdInWorkspace:
-SELECT * FROM books WHERE externalId = ? AND workspaceId = ? AND deletedAt IS NULL;
+bk_selectDeleted:
+SELECT * FROM books WHERE workspaceId = ? AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
+
+bk_countAll:
+SELECT COUNT(*) FROM books WHERE deletedAt IS NULL;

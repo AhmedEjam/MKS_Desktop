@@ -20,8 +20,20 @@ UPDATE flashcard_decks SET
     updatedAt = ?, lastEditedAt = ?
 WHERE id = ?;
 
+fc_deckUpdateBook:
+UPDATE flashcard_decks SET bookId = ?, updatedAt = ? WHERE id = ?;
+
 fc_deckSoftDelete:
 UPDATE flashcard_decks SET deletedAt = ? WHERE id = ?;
+
+fc_deckRestore:
+UPDATE flashcard_decks SET deletedAt = NULL WHERE id = ?;
+
+fc_deckPermanentDelete:
+DELETE FROM flashcard_decks WHERE id = ?;
+
+fc_selectDeleted:
+SELECT * FROM flashcard_decks WHERE bookId IN (SELECT id FROM books WHERE workspaceId = ?) AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
 
 fc_deckLastInsertId:
 SELECT last_insert_rowid();
@@ -52,3 +64,21 @@ WHERE id = ?;
 
 fc_cardSoftDelete:
 UPDATE flashcards SET deletedAt = ? WHERE id = ?;
+
+fc_countDue:
+SELECT COUNT(*) FROM flashcards WHERE dueAt <= ? AND deletedAt IS NULL;
+
+fc_selectDue:
+SELECT * FROM flashcards WHERE dueAt <= ? AND deletedAt IS NULL ORDER BY dueAt ASC LIMIT ?;
+
+fc_snooze:
+UPDATE flashcards SET dueAt = ?, updatedAt = ? WHERE id = ?;
+
+fc_countAll:
+SELECT COUNT(*) FROM flashcards WHERE deletedAt IS NULL;
+
+fc_countWeak:
+SELECT COUNT(*) FROM flashcards WHERE attempts > 0 AND (correctCount * 1.0 / attempts) < 0.6 AND deletedAt IS NULL;
+
+fc_deckCountAll:
+SELECT COUNT(*) FROM flashcard_decks WHERE deletedAt IS NULL;

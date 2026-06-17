@@ -13,6 +13,15 @@ INSERT INTO note_collections (
     createdAt, updatedAt, lastStudiedAt, lastEditedAt
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
+nt_collectionUpdate:
+UPDATE note_collections SET
+    title = ?, description = ?, iconName = ?, coverImage = ?, tags = ?,
+    updatedAt = ?, lastEditedAt = ?
+WHERE id = ?;
+
+nt_collectionUpdateBook:
+UPDATE note_collections SET bookId = ?, updatedAt = ? WHERE id = ?;
+
 nt_collectionSoftDelete:
 UPDATE note_collections SET deletedAt = ? WHERE id = ?;
 
@@ -50,3 +59,27 @@ UPDATE note_blueprints SET reviewCount = ?, lastReviewedAt = ? WHERE id = ?;
 
 nt_blueprintSoftDelete:
 UPDATE note_blueprints SET deletedAt = ? WHERE id = ?;
+
+nt_blueprintRestore:
+UPDATE note_blueprints SET deletedAt = NULL WHERE id = ?;
+
+nt_blueprintPermanentDelete:
+DELETE FROM note_blueprints WHERE id = ?;
+
+nt_selectDeleted:
+SELECT * FROM note_blueprints WHERE collectionId IN (SELECT id FROM note_collections WHERE bookId IN (SELECT id FROM books WHERE workspaceId = ?)) AND deletedAt IS NOT NULL ORDER BY deletedAt DESC;
+
+nt_countDue:
+SELECT COUNT(*) FROM note_blueprints WHERE lastReviewedAt <= ? AND deletedAt IS NULL;
+
+nt_selectDue:
+SELECT * FROM note_blueprints WHERE lastReviewedAt <= ? AND deletedAt IS NULL ORDER BY lastReviewedAt ASC LIMIT ?;
+
+nt_snooze:
+UPDATE note_blueprints SET lastReviewedAt = ?, updatedAt = ? WHERE id = ?;
+
+nt_countAll:
+SELECT COUNT(*) FROM note_blueprints WHERE deletedAt IS NULL;
+
+nt_countLinked:
+SELECT COUNT(*) FROM note_blueprints WHERE sourceQuestionId IS NOT NULL AND deletedAt IS NULL;

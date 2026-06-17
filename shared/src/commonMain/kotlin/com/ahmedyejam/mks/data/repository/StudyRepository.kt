@@ -84,6 +84,31 @@ class StudyRepository(private val db: MksDatabase) {
         )
     }
 
+    suspend fun getLibraryKnowledgeSummary(): KnowledgeSummary = withContext(Dispatchers.IO) {
+        val now = currentTime()
+        KnowledgeSummary(
+            totalBooks = db.bookQueriesQueries.bk_countAll().executeAsOne().toInt(),
+            totalQuizzes = db.quizQueriesQueries.qz_countAll().executeAsOne().toInt(),
+            totalQuestions = db.questionQueriesQueries.qu_countAll().executeAsOne().toInt(),
+            unansweredQuestions = db.questionQueriesQueries.qu_countUnanswered().executeAsOne().toInt(),
+            questionsWithNotes = db.questionQueriesQueries.qu_countWithNotes().executeAsOne().toInt(),
+            markedQuestions = db.questionQueriesQueries.qu_countMarked().executeAsOne().toInt(),
+            droppedQuestions = db.questionQueriesQueries.qu_countDropped().executeAsOne().toInt(),
+            missedQuestions = db.questionQueriesQueries.qu_countMissed().executeAsOne().toInt(),
+            weakQuestions = db.questionQueriesQueries.qu_countWeak(now).executeAsOne().toInt(),
+            flashcardDecks = db.flashcardQueriesQueries.fc_deckCountAll().executeAsOne().toInt(),
+            totalFlashcards = db.flashcardQueriesQueries.fc_countAll().executeAsOne().toInt(),
+            dueFlashcards = db.flashcardQueriesQueries.fc_countDue(now).executeAsOne().toInt(),
+            weakFlashcards = db.flashcardQueriesQueries.fc_countWeak().executeAsOne().toInt(),
+            totalBlueprints = db.noteQueriesQueries.nt_countAll().executeAsOne().toInt(),
+            blueprintsDueForReview = db.noteQueriesQueries.nt_countDue(now).executeAsOne().toInt(),
+            linkedBlueprints = db.noteQueriesQueries.nt_countLinked().executeAsOne().toInt(),
+            openMistakes = db.mistakeQueriesQueries.mk_countOpen().executeAsOne().toInt(),
+            fixedMistakes = db.mistakeQueriesQueries.mk_countFixed().executeAsOne().toInt(),
+            mistakesDueForReview = db.mistakeQueriesQueries.mk_countDue(now).executeAsOne().toInt(),
+        )
+    }
+
     private fun currentTime(): Long = com.ahmedyejam.mks.util.currentTimeMillis()
 }
 

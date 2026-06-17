@@ -64,3 +64,33 @@ UPDATE questions SET deletedAt = ? WHERE id = ?;
 
 qu_lastInsertId:
 SELECT last_insert_rowid();
+
+qu_countMarked:
+SELECT COUNT(*) FROM questions WHERE isMarked = 1 AND deletedAt IS NULL;
+
+qu_selectWeak:
+SELECT * FROM questions WHERE lastStudiedAt <= ? AND attempts > 0 AND (correctCount * 1.0 / attempts) < 0.6 AND deletedAt IS NULL ORDER BY lastStudiedAt ASC LIMIT ?;
+
+qu_countWeak:
+SELECT COUNT(*) FROM questions WHERE lastStudiedAt <= ? AND attempts > 0 AND (correctCount * 1.0 / attempts) < 0.6 AND deletedAt IS NULL;
+
+qu_clearMark:
+UPDATE questions SET isMarked = 0, markReviewAt = NULL, updatedAt = ? WHERE id = ?;
+
+qu_markReviewed:
+UPDATE questions SET lastStudiedAt = ?, updatedAt = ? WHERE id = ?;
+
+qu_countAll:
+SELECT COUNT(*) FROM questions WHERE deletedAt IS NULL;
+
+qu_countUnanswered:
+SELECT COUNT(*) FROM questions WHERE attempts = 0 AND deletedAt IS NULL;
+
+qu_countWithNotes:
+SELECT COUNT(*) FROM questions WHERE notes IS NOT NULL AND notes != '' AND deletedAt IS NULL;
+
+qu_countDropped:
+SELECT COUNT(*) FROM questions WHERE isDropped = 1 AND deletedAt IS NULL;
+
+qu_countMissed:
+SELECT COUNT(*) FROM questions WHERE attempts > 0 AND (correctCount < attempts OR lastAttemptResult = 0) AND deletedAt IS NULL;

@@ -37,6 +37,7 @@ import com.ahmedyejam.mks.db.MksDatabase
 import com.ahmedyejam.mks.platform.FileManager
 import com.ahmedyejam.mks.util.currentTimeMillis
 import com.ahmedyejam.mks.util.readTextWithLimit
+import com.ahmedyejam.mks.util.toJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -562,18 +563,18 @@ class ImportLibraryManager(
                         if (existingQuiz != null) {
                             val now = currentTimeMillis()
                             db.quizQueriesQueries.qz_update(
-                                title = quizEntity.title,
-                                description = quizEntity.description,
-                                category = quizEntity.category,
-                                tags = "[]",
-                                iconName = quizEntity.iconName,
-                                coverImage = quizEntity.coverImage,
-                                updatedAt = now,
-                                contentUpdatedAt = now,
-                                lastEditedAt = now,
-                                isPinned = if (quizEntity.isPinned) 1L else 0L,
-                                id = existingQuiz.id,
-                            )
+                            title = quizEntity.title,
+                            description = quizEntity.description,
+                            category = quizEntity.category,
+                            tags = quizEntity.tags.toJson(),
+                            iconName = quizEntity.iconName,
+                            coverImage = quizEntity.coverImage,
+                            updatedAt = now,
+                            contentUpdatedAt = now,
+                            lastEditedAt = now,
+                            isPinned = if (quizEntity.isPinned) 1L else 0L,
+                            id = existingQuiz.id,
+                        )
                             updatedQuizzesCount++
                             existingQuiz.id
                         } else {
@@ -585,7 +586,7 @@ class ImportLibraryManager(
                                 title = quizEntity.title,
                                 description = quizEntity.description,
                                 category = quizEntity.category,
-                                tags = "[]",
+                                tags = quizEntity.tags.toJson(),
                                 iconName = quizEntity.iconName,
                                 coverImage = quizEntity.coverImage,
                                 createdAt = now, updatedAt = now,
@@ -632,8 +633,8 @@ class ImportLibraryManager(
                                 db.questionQueriesQueries.qu_update(
                                     text = qEntity.text,
                                     type = qEntity.type.name,
-                                    options = "[]",
-                                    correctAnswers = "[]",
+                                    options = qEntity.options.toJson(),
+                                    correctAnswers = qEntity.correctAnswers.toJson(),
                                     explanation = qEntity.explanation,
                                     hint = qEntity.hint,
                                     reference = qEntity.reference,
@@ -642,8 +643,8 @@ class ImportLibraryManager(
                                     imageName = qEntity.imageName,
                                     imageSource = qEntity.imageSource,
                                     notes = qEntity.notes,
-                                    categories = "[]",
-                                    tags = "[]",
+                                    categories = qEntity.categories.toJson(),
+                                    tags = qEntity.tags.toJson(),
                                     updatedAt = now,
                                     lastEditedAt = now,
                                     id = existingQuestion.id,
@@ -658,8 +659,8 @@ class ImportLibraryManager(
                                     quizId = qEntity.quizId,
                                     text = qEntity.text,
                                     type = qEntity.type.name,
-                                    options = "[]",
-                                    correctAnswers = "[]",
+                                    options = qEntity.options.toJson(),
+                                    correctAnswers = qEntity.correctAnswers.toJson(),
                                     explanation = qEntity.explanation,
                                     hint = qEntity.hint,
                                     reference = qEntity.reference,
@@ -670,7 +671,8 @@ class ImportLibraryManager(
                                     attempts = 0L, correctCount = 0L,
                                     isDropped = 0L, droppedAt = null, droppedReason = null,
                                     isMarked = 0L, markedAt = null, markReason = null, markReviewAt = null,
-                                    notes = qEntity.notes, categories = "[]", tags = "[]",
+                                    notes = qEntity.notes, categories = qEntity.categories.toJson(), 
+                                    tags = qEntity.tags.toJson(),
                                     difficulty = null, dueAt = 0L, reviewCount = 0L, lastReviewedAt = 0L,
                                     additionalInfo = qEntity.additionalInfo,
                                     sourceBookId = null, sourceQuizId = null, sourceQuestionId = null,

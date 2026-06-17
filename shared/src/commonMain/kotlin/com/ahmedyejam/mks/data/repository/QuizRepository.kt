@@ -44,10 +44,55 @@ class QuizRepository(private val db: MksDatabase) : KoinComponent {
         } catch (e: Exception) { MksResult.Error("Failed to create quiz", e) }
     }
 
+    suspend fun updateQuiz(quiz: QuizEntity) = withContext(Dispatchers.IO) {
+        val now = currentTime()
+        db.quizQueriesQueries.qz_update(
+            title = quiz.title, description = quiz.description,
+            category = quiz.category, tags = quiz.tags.toJson(),
+            iconName = quiz.iconName, coverImage = quiz.coverImage,
+            updatedAt = now, contentUpdatedAt = quiz.contentUpdatedAt,
+            lastEditedAt = now, isPinned = quiz.isPinned.toLong(),
+            id = quiz.id
+        )
+    }
+
+    suspend fun moveQuiz(quizId: Long, targetBookId: Long) = withContext(Dispatchers.IO) {
+        db.quizQueriesQueries.qz_updateBook(targetBookId, currentTime(), quizId)
+    }
+
     suspend fun deleteQuiz(id: Long): MksResult<Boolean> = withContext(Dispatchers.IO) {
         try { db.quizQueriesQueries.qz_softDelete(currentTime(), id); MksResult.Success(true) }
         catch (e: Exception) { MksResult.Error("Failed to delete quiz", e) }
     }
+
+    suspend fun restoreQuiz(id: Long) = withContext(Dispatchers.IO) {
+        db.quizQueriesQueries.qz_restore(id)
+    }
+
+    suspend fun permanentlyDeleteQuiz(id: Long) = withContext(Dispatchers.IO) {
+        db.quizQueriesQueries.qz_permanentDelete(id)
+    }
+
+    fun getDeletedQuizzes(workspaceId: Long): Flow<List<QuizEntity>> =
+        db.quizQueriesQueries.qz_selectDeleted(workspaceId)
+            .asFlow().mapToList(Dispatchers.IO)
+            .map { list -> 
+                list.map { 
+                    QuizEntity(
+                        id = it.id, externalId = it.externalId, bookId = it.bookId,
+                        title = it.title, description = it.description, category = it.category,
+                        tags = it.tags.fromJson(emptyList()), iconName = it.iconName, coverImage = it.coverImage,
+                        createdAt = it.createdAt, updatedAt = it.updatedAt, contentUpdatedAt = it.contentUpdatedAt,
+                        lastStudiedAt = it.lastStudiedAt, lastEditedAt = it.lastEditedAt,
+                        isPinned = it.isPinned != 0L, isSystem = it.isSystem != 0L,
+                        questionCount = it.questionCount.toInt(), answeredCount = it.answeredCount.toInt(),
+                        totalAttempts = it.totalAttempts.toInt(),
+                        completionPercentage = it.completionPercentage.toFloat(),
+                        accuracyPercentage = it.accuracyPercentage.toFloat(),
+                        deletedAt = it.deletedAt
+                    )
+                } 
+            }
 
     fun observeQuestionsByQuiz(quizId: Long): Flow<List<QuestionEntity>> =
         db.questionQueriesQueries.qu_selectByQuiz(quizId)
